@@ -1,0 +1,77 @@
+#!/bin/bash
+#
+#Copyright (C) 2011 The Pennsylvania State University
+#Systems and Internet Infrastructure Security Laboratory
+#
+#Author:
+#    Damien Octeau <octeau@cse.psu.edu>
+#
+#This program is free software; you can redistribute it and/or
+#modify it under the terms of the GNU General Public License
+#as published by the Free Software Foundation; either version 2
+#of the License, or (at your option) any later version.
+#
+#This program is distributed in the hope that it will be useful,
+#but WITHOUT ANY WARRANTY; without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#GNU General Public License for more details.
+#
+#You should have received a copy of the GNU General Public License
+#along with this program; if not, write to the Free Software
+#Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, 
+#USA.
+
+if ! which java > /dev/null 2>&1 ; then
+    echo "Please install a Java Runtime Environment before running Dare." 1>&2
+    exit 1
+fi
+
+script=$0
+cd `dirname $script`
+script=`basename $script`
+
+while [ -L "$script" ]
+do
+    script=`readlink $script`
+    cd `dirname $script`
+    script=`basename $script`
+done
+
+DED_DIR=`pwd -P`
+
+DED=$DED_DIR/dare-launcher-1.1.0
+SOOT_DIR="$DED_DIR/soot"
+ANDROID_LIBS="$DED_DIR/libs/class"
+PREVERIFY_SCRIPT="$DED_DIR/dex-preopt"
+PREVERIFY=""
+
+while getopts "ed:ocpbx:kl:" p
+do
+	case "$p" in
+	p)	PREVERIFY=" -p $PREVERIFY_SCRIPT";;
+	\?)	echo "Usage: $0 [-d <output directory] [-o] [-c] [-p] [-e] [-b] [-x <VM option>] [-k] <dex/apk file>"
+		echo "  -o : optimize .class files with Soot"
+		echo "  -c : optimize and decompile .class files with Soot"
+		echo "  -p : preverify classes using the Dalvik verifier and rewrite unverifiable classes"
+		echo "  -e : do not split exception tables"
+		echo "  -b : generate stubs for some missing classes"
+        echo "  -x : set VM options to run Soot (use option several times to set several VM options)"
+		echo "  -k : keep Jasmin files"
+		exit 1;;
+	esac
+done
+
+SOOT=$SOOT_DIR/soot-2.5.0.jar
+JASMIN=$SOOT_DIR/jasminclasses-2.5.0.jar
+LIBS="`find $ANDROID_LIBS -type f -name '*.jar' | tr '\n' ':'`$CLASSPATH"
+
+ARGS=()
+for arg in "$@"
+do
+	if [ "$arg" != "-p" ]; then
+		ARGS+=("$arg")
+	fi
+done
+
+${DED} -s ${SOOT} -a ${LIBS} -j ${JASMIN} -r ${DED_DIR}/dare-1.1.0${PREVERIFY} ${ARGS[@]}
+
