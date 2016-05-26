@@ -1,0 +1,1536 @@
+diff --git a/Android.mk b/Android.mk
+index 151621c..733c227 100644
+--- a/Android.mk
++++ b/Android.mk
+@@ -234,7 +234,8 @@ LOCAL_SRC_FILES += \
+ 	telephony/java/com/android/internal/telephony/ITelephonyRegistry.aidl \
+ 	telephony/java/com/android/internal/telephony/IWapPushManager.aidl \
+ 	wifi/java/android/net/wifi/IWifiManager.aidl \
+-	wifi/java/android/net/wifi/p2p/IWifiP2pManager.aidl
++	wifi/java/android/net/wifi/p2p/IWifiP2pManager.aidl \
++	core/java/android/os/IIntelliDroidService.aidl
+ #
+ 
+ 
+diff --git a/api/current.txt b/api/current.txt
+index 02b95a0..0fc8443 100644
+--- a/api/current.txt
++++ b/api/current.txt
+@@ -5708,6 +5708,7 @@ package android.content {
+     field public static final java.lang.String DROPBOX_SERVICE = "dropbox";
+     field public static final java.lang.String INPUT_METHOD_SERVICE = "input_method";
+     field public static final java.lang.String INPUT_SERVICE = "input";
++    field public static final java.lang.String INTELLIDROID_SERVICE = "IntelliDroid";
+     field public static final java.lang.String KEYGUARD_SERVICE = "keyguard";
+     field public static final java.lang.String LAYOUT_INFLATER_SERVICE = "layout_inflater";
+     field public static final java.lang.String LOCATION_SERVICE = "location";
+@@ -17151,6 +17152,25 @@ package android.os {
+     method public boolean quitSafely();
+   }
+ 
++  public abstract interface IAndroidMCService implements android.os.IInterface {
++    method public abstract java.lang.String getPackageToTest() throws android.os.RemoteException;
++    method public abstract void registerNewListener(android.os.Bundle) throws android.os.RemoteException;
++    method public abstract void sendListenerInfo(android.os.Bundle) throws android.os.RemoteException;
++    method public abstract void setPackageToTest(java.lang.String) throws android.os.RemoteException;
++    method public abstract void setTime(long) throws android.os.RemoteException;
++    method public abstract void triggerCallStateChange() throws android.os.RemoteException;
++    method public abstract void triggerLocationChange() throws android.os.RemoteException;
++    method public abstract void triggerNewSms() throws android.os.RemoteException;
++    method public abstract void unregisterRemovedListener(android.os.Bundle) throws android.os.RemoteException;
++  }
++
++  public static abstract class IAndroidMCService.Stub extends android.os.Binder implements android.os.IAndroidMCService {
++    ctor public IAndroidMCService.Stub();
++    method public android.os.IBinder asBinder();
++    method public static android.os.IAndroidMCService asInterface(android.os.IBinder);
++    method public boolean onTransact(int, android.os.Parcel, android.os.Parcel, int) throws android.os.RemoteException;
++  }
++
+   public abstract interface IBinder {
+     method public abstract void dump(java.io.FileDescriptor, java.lang.String[]) throws android.os.RemoteException;
+     method public abstract void dumpAsync(java.io.FileDescriptor, java.lang.String[]) throws android.os.RemoteException;
+@@ -17175,10 +17195,39 @@ package android.os {
+     method public abstract void binderDied();
+   }
+ 
++  public abstract interface IIntelliDroidService implements android.os.IInterface {
++    method public abstract java.lang.String getPackageToTest() throws android.os.RemoteException;
++    method public abstract void registerNewListener(android.os.Bundle) throws android.os.RemoteException;
++    method public abstract void sendListenerInfo(android.os.Bundle) throws android.os.RemoteException;
++    method public abstract void setPackageToTest(java.lang.String) throws android.os.RemoteException;
++    method public abstract void setTime(long) throws android.os.RemoteException;
++    method public abstract void triggerCallStateChange() throws android.os.RemoteException;
++    method public abstract void triggerLocationChange() throws android.os.RemoteException;
++    method public abstract void triggerNewSms() throws android.os.RemoteException;
++    method public abstract void unregisterRemovedListener(android.os.Bundle) throws android.os.RemoteException;
++  }
++
++  public static abstract class IIntelliDroidService.Stub extends android.os.Binder implements android.os.IIntelliDroidService {
++    ctor public IIntelliDroidService.Stub();
++    method public android.os.IBinder asBinder();
++    method public static android.os.IIntelliDroidService asInterface(android.os.IBinder);
++    method public boolean onTransact(int, android.os.Parcel, android.os.Parcel, int) throws android.os.RemoteException;
++  }
++
+   public abstract interface IInterface {
+     method public abstract android.os.IBinder asBinder();
+   }
+ 
++  public class IntelliDroidManager {
++    ctor public IntelliDroidManager();
++    method public java.lang.String getPackageToTest();
++    method public void setPackageToTest(java.lang.String);
++    method public void setTime(long);
++    method public void triggerCallStateChange();
++    method public void triggerLocationChange();
++    method public void triggerNewSms();
++  }
++
+   public final class Looper {
+     method public void dump(android.util.Printer, java.lang.String);
+     method public static android.os.Looper getMainLooper();
+diff --git a/core/java/android/app/ContextImpl.java b/core/java/android/app/ContextImpl.java
+index 3fc82fa..11881b2 100644
+--- a/core/java/android/app/ContextImpl.java
++++ b/core/java/android/app/ContextImpl.java
+@@ -90,6 +90,9 @@ import android.os.UserHandle;
+ import android.os.SystemVibrator;
+ import android.os.UserManager;
+ import android.os.storage.StorageManager;
++// *********** INTELLIDROID MODIFICATIONS ***********
++import android.os.IntelliDroidManager;
++// *********** INTELLIDROID MODIFICATIONS ***********
+ import android.telephony.TelephonyManager;
+ import android.content.ClipboardManager;
+ import android.util.AndroidRuntimeException;
+@@ -536,6 +539,15 @@ class ContextImpl extends Context {
+                 IAppOpsService service = IAppOpsService.Stub.asInterface(b);
+                 return new AppOpsManager(ctx, service);
+             }});
++
++        // *********** INTELLIDROID MODIFICATIONS ***********
++		// Register IntelliDroid service
++		registerService(INTELLIDROID_SERVICE, new ServiceFetcher() {
++		public Object createService(ContextImpl ctx) {
++			return new IntelliDroidManager();
++            }});
++        // *********** INTELLIDROID MODIFICATIONS ***********
++
+     }
+ 
+     static ContextImpl getImpl(Context context) {
+diff --git a/core/java/android/app/IAlarmManager.aidl b/core/java/android/app/IAlarmManager.aidl
+index edb40ed..7cd3c8e 100644
+--- a/core/java/android/app/IAlarmManager.aidl
++++ b/core/java/android/app/IAlarmManager.aidl
+@@ -18,6 +18,10 @@ package android.app;
+ 
+ import android.app.PendingIntent;
+ 
++// ************* INTELLIDROID MODIFICATIONS **************
++import android.os.Bundle;
++// ************* INTELLIDROID MODIFICATIONS **************
++
+ /**
+  * System private API for talking with the alarm manager service.
+  *
+@@ -30,6 +34,10 @@ interface IAlarmManager {
+     void setTime(long millis);
+     void setTimeZone(String zone);
+     void remove(in PendingIntent operation);
++
++    // ************* INTELLIDROID MODIFICATIONS **************
++    Bundle getListenerInfo(int listenerID);
++    // ************* INTELLIDROID MODIFICATIONS **************
+ }
+ 
+ 
+diff --git a/core/java/android/content/BroadcastReceiver.java b/core/java/android/content/BroadcastReceiver.java
+index 9a32fdf..1a86c42 100644
+--- a/core/java/android/content/BroadcastReceiver.java
++++ b/core/java/android/content/BroadcastReceiver.java
+@@ -345,6 +345,10 @@ public abstract class BroadcastReceiver {
+          * asynchronous broadcast handling.
+          */
+         public final void abortBroadcast() {
++            // *********** INTELLIDROID MODIFICATIONS ***********
++            Log.i("IntelliDroid", "abortBroadcast called");
++            // *********** INTELLIDROID MODIFICATIONS ***********
++
+             checkSynchronousHint();
+             mAbortBroadcast = true;
+         }
+@@ -686,6 +690,10 @@ public abstract class BroadcastReceiver {
+      * Context.sendBroadcast}</strong></p>
+      */
+     public final void abortBroadcast() {
++        // *********** INTELLIDROID MODIFICATIONS ***********
++        Log.i("IntelliDroid", "abortBroadcast called");
++        // *********** INTELLIDROID MODIFICATIONS ***********
++
+         checkSynchronousHint();
+         mPendingResult.mAbortBroadcast = true;
+     }
+diff --git a/core/java/android/content/ContentResolver.java b/core/java/android/content/ContentResolver.java
+index fefd343..77b44bb 100644
+--- a/core/java/android/content/ContentResolver.java
++++ b/core/java/android/content/ContentResolver.java
+@@ -18,6 +18,10 @@ package android.content;
+ 
+ import dalvik.system.CloseGuard;
+ 
++// *********** INTELLIDROID MODIFICATIONS ***********
++import java.util.Arrays;
++// *********** INTELLIDROID MODIFICATIONS ***********
++
+ import android.accounts.Account;
+ import android.app.ActivityManagerNative;
+ import android.app.ActivityThread;
+@@ -997,6 +1001,10 @@ public abstract class ContentResolver {
+      */
+     public final int delete(Uri url, String where, String[] selectionArgs)
+     {
++        // *********** INTELLIDROID MODIFICATIONS ***********
++        Log.i("IntelliDroid", "ContentResolver.delete: url=" + url.toString() + "; where=" + where + "; selectionArys=" + Arrays.toString(selectionArgs));
++        // *********** INTELLIDROID MODIFICATIONS ***********
++
+         IContentProvider provider = acquireProvider(url);
+         if (provider == null) {
+             throw new IllegalArgumentException("Unknown URL " + url);
+diff --git a/core/java/android/content/Context.java b/core/java/android/content/Context.java
+index 5bd28b9..b2bd3ec 100644
+--- a/core/java/android/content/Context.java
++++ b/core/java/android/content/Context.java
+@@ -2283,6 +2283,11 @@ public abstract class Context {
+      */
+     public static final String APP_OPS_SERVICE = "appops";
+ 
++	/**
++	 * Define for IntelliDroid service
++	 */
++	public static final String INTELLIDROID_SERVICE = "IntelliDroid";
++
+     /**
+      * Determine whether the given permission is allowed for a particular
+      * process and user ID running in the system.
+diff --git a/core/java/android/os/IIntelliDroidService.aidl b/core/java/android/os/IIntelliDroidService.aidl
+index e69de29..bf7b2a2 100644
+--- a/core/java/android/os/IIntelliDroidService.aidl
++++ b/core/java/android/os/IIntelliDroidService.aidl
+@@ -0,0 +1,21 @@
++/*
++* aidl file : frameworks/base/core/java/android/os/IIntelliDroidService.aidl
++* This file contains definitions of functions which are exposed by service
++*/
++package android.os;
++
++import android.os.Bundle;
++
++interface IIntelliDroidService {
++
++	void setPackageToTest(String packageName);
++    String getPackageToTest();
++    void triggerLocationChange();
++    void triggerCallStateChange();
++    void triggerNewSms();
++    void setTime(long millis);
++
++    oneway void sendListenerInfo(in Bundle bundle);
++    oneway void registerNewListener(in Bundle bundle);
++    oneway void unregisterRemovedListener(in Bundle bundle);
++}
+diff --git a/core/java/android/os/IntelliDroidManager.java b/core/java/android/os/IntelliDroidManager.java
+index e69de29..0cc0afd 100644
+--- a/core/java/android/os/IntelliDroidManager.java
++++ b/core/java/android/os/IntelliDroidManager.java
+@@ -0,0 +1,78 @@
++package android.os;
++
++import android.os.IIntelliDroidService;
++import android.os.ServiceManager;
++import android.content.Context;
++import android.util.Log;
++import java.lang.Class;
++import java.lang.reflect.Method;
++import java.lang.reflect.InvocationTargetException;
++//import com.android.internal.telephony.PhoneFactory;
++
++public class IntelliDroidManager {
++    private static final String TAG = "IntelliDroidManager";
++
++	private static IIntelliDroidService remoteService;
++
++	public IntelliDroidManager() {
++		if (remoteService == null) {
++			remoteService = IIntelliDroidService.Stub.asInterface(ServiceManager.getService(Context.INTELLIDROID_SERVICE));
++		}
++	}
++
++	public void setPackageToTest (String packageName) {
++		try {
++			remoteService.setPackageToTest(packageName);
++		} catch (RemoteException e) {
++            Log.e(TAG, "Exception: " + e.toString());
++			return;
++		}
++	}
++
++	public String getPackageToTest() {
++		try {
++			return remoteService.getPackageToTest();
++		} catch (RemoteException e) {
++            Log.e(TAG, "Exception: " + e.toString());
++			return null;
++		}
++	}
++
++    public void triggerLocationChange() {
++        try {
++            remoteService.triggerLocationChange();
++        } catch (RemoteException e) {
++            Log.e(TAG, "Exception: " + e.toString());
++            return;
++        }
++    }
++
++    public void triggerCallStateChange() {
++        try {
++            remoteService.triggerCallStateChange();
++        } catch (RemoteException e) {
++            Log.e(TAG, "Exception: " + e.toString());
++            return;
++        }
++    }
++
++    public void triggerNewSms() {
++        try {
++            remoteService.triggerNewSms();
++        } catch (RemoteException e) {
++            Log.e(TAG, "Exception: " + e.toString());
++            return;
++        } catch (Exception e) {
++            Log.e(TAG, "Exception: " + e.toString());
++            return;
++        }
++    }
++
++    public void setTime(long millis) {
++        try {
++            remoteService.setTime(millis);
++        } catch (Exception e) {
++            Log.e(TAG, "Exception: " + e.toString());
++        }
++    }
++}
+diff --git a/location/java/android/location/ILocationManager.aidl b/location/java/android/location/ILocationManager.aidl
+index c353ec6..07c14a5 100644
+--- a/location/java/android/location/ILocationManager.aidl
++++ b/location/java/android/location/ILocationManager.aidl
+@@ -90,4 +90,8 @@ interface ILocationManager
+     void locationCallbackFinished(ILocationListener listener);
+ 
+ 
++    // ************* INTELLIDROID MODIFICATIONS **************
++    Bundle getListenerInfo(int listenerID);
++    // ************* INTELLIDROID MODIFICATIONS **************
++
+ }
+diff --git a/location/java/android/location/LocationManager.java b/location/java/android/location/LocationManager.java
+index 989178a..46d37ab 100644
+--- a/location/java/android/location/LocationManager.java
++++ b/location/java/android/location/LocationManager.java
+@@ -212,6 +212,7 @@ public class LocationManager {
+ 
+         @Override
+         public void onLocationChanged(Location location) {
++            Log.d(TAG, "FrameworkAnalysis: ListenerTransport.onLocationChanged()");
+             Message msg = Message.obtain();
+             msg.what = TYPE_LOCATION_CHANGED;
+             msg.obj = location;
+@@ -249,6 +250,7 @@ public class LocationManager {
+         }
+ 
+         private void _handleMessage(Message msg) {
++            Log.d(TAG, "FrameworkAnalysis: ListenerTransport._handleMessage()");
+             switch (msg.what) {
+                 case TYPE_LOCATION_CHANGED:
+                     Location location = new Location((Location) msg.obj);
+diff --git a/services/java/com/android/server/AlarmManagerService.java b/services/java/com/android/server/AlarmManagerService.java
+index fa758a8..08fdc55 100644
+--- a/services/java/com/android/server/AlarmManagerService.java
++++ b/services/java/com/android/server/AlarmManagerService.java
+@@ -57,6 +57,11 @@ import java.util.Iterator;
+ import java.util.Map;
+ import java.util.TimeZone;
+ 
++// *********** INTELLIDROID MODIFICATIONS ***********
++import android.os.IIntelliDroidService;
++import android.os.ServiceManager;
++// *********** INTELLIDROID MODIFICATIONS ***********
++
+ import com.android.internal.util.LocalLog;
+ 
+ class AlarmManagerService extends IAlarmManager.Stub {
+@@ -106,6 +111,11 @@ class AlarmManagerService extends IAlarmManager.Stub {
+     private final PendingIntent mTimeTickSender;
+     private final PendingIntent mDateChangeSender;
+ 
++    // *********** INTELLIDROID MODIFICATIONS ***********
++    private Map<Integer, Alarm> mIntelliDroidRecords = new HashMap<Integer, Alarm>();
++    private int mIntelliDroidIndex = 0;
++    // *********** INTELLIDROID MODIFICATIONS ***********
++
+     private static final class InFlight extends Intent {
+         final PendingIntent mPendingIntent;
+         final Pair<String, ComponentName> mTarget;
+@@ -207,6 +217,24 @@ class AlarmManagerService extends IAlarmManager.Stub {
+         }
+     }
+     
++    // *********** INTELLIDROID MODIFICATIONS ***********
++    public Bundle getListenerInfo(int listenerID) {
++        if (!mIntelliDroidRecords.containsKey(listenerID)) {
++            return null;
++        }
++
++        Bundle bundle = new Bundle();
++        Alarm alarm = mIntelliDroidRecords.get(listenerID);
++
++        bundle.putString("listenerType", "alarm");
++        bundle.putString("listenerID", Integer.toString(listenerID));
++
++        bundle.putString("<Alarm>.when", Long.toString(alarm.when));
++
++        return bundle;
++    }
++    // *********** INTELLIDROID MODIFICATIONS ***********
++
+     public void set(int type, long triggerAtTime, PendingIntent operation) {
+         setRepeating(type, triggerAtTime, 0, operation);
+     }
+@@ -445,6 +473,29 @@ class AlarmManagerService extends IAlarmManager.Stub {
+         if (localLOGV) Slog.v(TAG, "Adding alarm " + alarm + " at " + index);
+         alarmList.add(index, alarm);
+ 
++        // *********** INTELLIDROID MODIFICATIONS ***********
++        synchronized (mIntelliDroidRecords) {
++            Slog.i(TAG, "New Alarm with package name: " + alarm.operation.getCreatorPackage());
++            mIntelliDroidRecords.put(mIntelliDroidIndex, alarm);
++
++            Bundle intellidroidBundle = new Bundle();
++            intellidroidBundle.putString("listenerType", "alarm");
++            intellidroidBundle.putString("listenerID", Integer.toString(mIntelliDroidIndex));
++            intellidroidBundle.putString("packageName", alarm.operation.getCreatorPackage());
++            intellidroidBundle.putString("receiverClass", alarm.operation.getClass().getName());
++
++            IIntelliDroidService intellidroidService = IIntelliDroidService.Stub.asInterface(ServiceManager.getService(Context.INTELLIDROID_SERVICE));
++
++            try {
++                intellidroidService.registerNewListener(intellidroidBundle);
++            } catch (Exception e) {
++                Slog.e(TAG, e.toString());
++            }
++
++            mIntelliDroidIndex++;
++        }
++        // *********** INTELLIDROID MODIFICATIONS ***********
++
+         if (localLOGV) {
+             // Display the list of alarms for this alarm type
+             Slog.v(TAG, "alarms: " + alarmList.size() + " type: " + alarm.type);
+diff --git a/services/java/com/android/server/IntelliDroidService.java b/services/java/com/android/server/IntelliDroidService.java
+index e69de29..7a72262 100644
+--- a/services/java/com/android/server/IntelliDroidService.java
++++ b/services/java/com/android/server/IntelliDroidService.java
+@@ -0,0 +1,859 @@
++package com.android.server;
++
++import android.content.Context;
++import android.os.Handler;
++import android.os.IIntelliDroidService;
++import android.os.Looper;
++import android.os.Message;
++import android.os.Process;
++import android.os.SystemClock;
++
++import java.net.*;
++import java.io.*;
++import java.util.Date;
++import java.text.SimpleDateFormat;
++
++import android.util.Slog;
++import android.os.ServiceManager;
++import android.os.Bundle;
++import android.os.Handler;
++import android.os.HandlerThread;
++import android.os.AsyncResult;
++import android.content.Context;
++import android.telephony.TelephonyManager;
++import android.location.ILocationManager;
++import android.location.LocationManager;
++import android.location.Location;
++import android.location.LocationListener;
++import android.app.IAlarmManager;
++import com.android.internal.telephony.ITelephonyRegistry;
++import com.android.internal.telephony.PhoneFactory;
++import com.android.internal.telephony.PhoneBase;
++import com.android.internal.telephony.PhoneProxy;
++import android.telephony.PhoneStateListener;
++import android.app.ActivityThread;
++import com.android.internal.telephony.gsm.SmsMessage;
++import com.android.internal.util.HexDump;
++import android.content.Intent;
++
++import android.util.Log;
++
++public class IntelliDroidService extends IIntelliDroidService.Stub {
++    private static final String TAG = "IntelliDroidService";
++
++    private final Object mLock = new Object();
++    private IntelliDroidHandler _handler = null;
++    private HandlerThread _handlerThread = null;
++    private IntelliDroidSocketThread _socketThread = null;
++
++    // Values for triggering location callback (old)
++    static double _lastLatitude = 12.34567;
++    static double _lastLongitude = 76.54321;
++    static long _lastElapsedRealtimeNanos = 10;
++
++    private PhoneBase _phone;
++    private String _testPackageName = null;
++
++    private static final int MSG_TRIGGER_LOCATION_CHANGE = 1;
++    private static final int MSG_TRIGGER_CALL_STATE_CHANGE = 2;
++    private static final int MSG_TRIGGER_NEW_SMS = 3;
++    private static final int MSG_SOCKET_SEND = 4;
++
++    private static final String SOCKET_START = "START";
++    private static final String SOCKET_TRIGGER = "TRIGGER";
++    private static final String SOCKET_NEW_LISTENER = "NEW_LISTENER";
++    private static final String SOCKET_REMOVE_LISTENER = "REMOVE_LISTENER";
++    private static final String SOCKET_INFO = "INFO";
++    private static final String SOCKET_CLOSE = "CLOSE";
++
++    private static final String LOCATION_TYPE = "location";
++    private static final String TELEPHONY_TYPE = "telephony";
++    private static final String SMS_TYPE = "sms";
++    private static final String ALARM_TYPE = "alarm";
++    private static final String TIME_TYPE = "time";
++    private static final String BOOT_TYPE = "boot";
++
++    private class IntelliDroidHandler extends Handler {
++        public IntelliDroidHandler() {
++            super();
++        }
++
++        public IntelliDroidHandler(Looper looper) {
++            //super(looper, null, true);
++            super(looper);
++        }
++
++        @Override
++        public void handleMessage(Message msg) {
++            switch (msg.what) {
++                case MSG_TRIGGER_LOCATION_CHANGE:
++                    triggerLocationChangePrivate();
++                    break;
++                case MSG_TRIGGER_CALL_STATE_CHANGE:
++                    triggerCallStateChangePrivate();
++                    break;
++                case MSG_TRIGGER_NEW_SMS:
++                    triggerNewSmsPrivate();
++                    break;
++                case MSG_SOCKET_SEND:
++                    _socketThread.sendToSocket((String)msg.obj);
++                    break;
++            }
++        }
++    }
++
++    private class IntelliDroidSocketThread extends Thread {
++        private static final String TAG = "IntelliDroidSocketThread";
++
++        private Object _socketLock = new Object();
++
++        Socket _socket = null;
++        BufferedReader _reader = null;
++        BufferedWriter _writer = null;
++
++        public IntelliDroidSocketThread() {
++            super("IntelliDroidSocketThread");
++        }
++
++        public void sendToSocket(String outputString) {
++            synchronized (_socketLock) {
++                if (_socket == null) {
++                    return;
++                }
++
++                try {
++                    _writer.write(outputString, 0, outputString.length());
++                    _writer.flush();
++                } catch (Exception e) {
++                    Slog.e(TAG, e.toString());
++                    Slog.e(TAG, Log.getStackTraceString(e));
++                }
++            }
++        }
++
++        /*
++        private String getListenerType(Object listener) {
++            if (listener instanceof LocationListener) {
++                return LOCATION_TYPE;
++            } else if (listener instanceof PhoneStateListener) {
++                return TELEPHONY_TYPE;
++            }
++
++            return null;
++        }
++        */
++
++        @Override
++        public void run() {
++            try {
++                // Construct socket and bind to port
++                ServerSocket serverSocket = new ServerSocket();
++                serverSocket.setReuseAddress(true);
++                serverSocket.bind(new InetSocketAddress("127.0.0.1", 12348));
++
++                while (true) {
++                    try {
++                        synchronized (_socketLock) {
++                            _socket = serverSocket.accept();
++                            // Should this be UTF-8 encoded?
++                            _reader = new BufferedReader(new InputStreamReader(_socket.getInputStream(), "UTF-8"));
++                            _writer = new BufferedWriter(new OutputStreamWriter(_socket.getOutputStream()));
++                        }
++
++                        Slog.i(TAG, "Socket connection made");
++
++                        while (true) {
++                            String line = null;
++                            while (line == null) {
++                                line = _reader.readLine();
++                            }
++
++                            if (line != null) {
++                                Slog.i(TAG, "Socket input: " + line);
++                            }
++
++                            // Match spaces only if it has an even number of double quotes after it
++                            String[] input = line.split(" (?=([^\"]*\"[^\"]*\")*[^\"]*$)");
++                            //String[] input = line.split("\\s+");
++                            String command = input[0];
++
++                            if (command.equals(SOCKET_START)) {
++                                _testPackageName = input[1];
++                                Slog.i(TAG, "Testing package: " + _testPackageName);
++
++                            } else if (command.equals(SOCKET_TRIGGER)) {
++                                if (input[1].equals(LOCATION_TYPE)) {
++                                    String[] locationInfo = new String[input.length - 3];
++                                    System.arraycopy(input, 3, locationInfo, 0, input.length - 3);
++
++                                    Location newLocation = generateLocation(locationInfo);
++                                    triggerLocationChangePrivate(newLocation);
++
++                                } else if (input[1].equals(SMS_TYPE)) {
++                                    String[] smsInfo = new String[input.length - 3];
++                                    System.arraycopy(input, 3, smsInfo, 0, input.length - 3);
++
++                                    SmsMessage smsMessage = generateSmsMessage(smsInfo);
++                                    triggerNewSmsPrivate(smsMessage);
++
++                                } else if (input[1].equals(ALARM_TYPE)) {
++                                    Long alarmWhen = Long.parseLong(input[3]);
++                                    triggerAlarm(alarmWhen);
++                                } else if (input[1].equals(TIME_TYPE)) {
++                                    Long time = Long.parseLong(input[2]);
++                                    SystemClock.setCurrentTimeMillis(time);
++                                } else if (input[1].equals(BOOT_TYPE)) {
++                                    triggerBootSignalPrivate();
++                                }
++
++                            } else if (command.equals(SOCKET_INFO)) {
++                                if (input[1].equals(LOCATION_TYPE)) {
++
++                                    ILocationManager locationService = ILocationManager.Stub.asInterface(ServiceManager.getService(Context.LOCATION_SERVICE));
++                                    Bundle info = locationService.getListenerInfo(Integer.parseInt(input[2]));
++
++                                    if (info == null) {
++                                        info = new Bundle();
++                                        info.putString("listenerType", "location");
++                                        info.putString("listenerID", "-1");
++                                        info.putString("latitude", "1234");
++                                    }
++
++                                    sendListenerInfo(info);
++                                } else if (input[1].equals(ALARM_TYPE)) {
++                                    IAlarmManager alarmService = IAlarmManager.Stub.asInterface(ServiceManager.getService(Context.ALARM_SERVICE));
++                                    Bundle info = alarmService.getListenerInfo(Integer.parseInt(input[2]));
++
++                                    if (info == null) {
++                                        info = new Bundle();
++                                        info.putString("listenerType", "alarm");
++                                        info.putString("listenerID", "-1");
++                                        info.putString("<Alarm.when>", Long.toString(System.currentTimeMillis()));
++                                    }
++
++                                    sendListenerInfo(info);
++                                } else if (input[1].equals(TIME_TYPE)) {
++                                    Bundle info = new Bundle();
++                                    info.putString("time", Long.toString(System.currentTimeMillis()));
++                                    sendListenerInfo(info);
++                                }
++
++                            } else if (command.equals(SOCKET_CLOSE)) {
++                                break;
++                            }
++                        }
++
++                        synchronized (_socketLock) {
++                            sendToSocket("CLOSE");
++
++                            _reader.close();
++                            _writer.close();
++                            _socket.close();
++
++                            _socket = null;
++                            _reader = null;
++                            _writer = null;
++                        }
++
++                        Slog.i(TAG, "Socket connection closed");
++
++                    } catch (Exception e) {
++                        Slog.e(TAG, e.toString());
++                        Slog.e(TAG, Log.getStackTraceString(e));
++                    }
++                }
++            } catch (Exception e) {
++                Slog.e(TAG, e.toString());
++                Slog.e(TAG, Log.getStackTraceString(e));
++            }
++        }
++    }
++
++    public IntelliDroidService(Context context) {
++    	super();
++    }
++
++    public void systemReady() {
++        synchronized (mLock) {
++            _handlerThread = new HandlerThread("IntelliDroidServiceHandlerThread");
++            _handlerThread.start();
++            _handler = new IntelliDroidHandler(_handlerThread.getLooper());
++
++            //_socketThread = new Thread(new IntelliDroidSocketThread(), "IntelliDroidSocketThread");
++            _socketThread = new IntelliDroidSocketThread();
++            _socketThread.start();
++
++            PhoneFactory.makeDefaultPhone(ActivityThread.currentActivityThread().getSystemContext());
++            _phone = (PhoneBase)((PhoneProxy)PhoneFactory.getDefaultPhone()).getActivePhone();
++
++            Slog.i(TAG, "IntelliDroidService ready");
++        }
++    }
++
++    public void sendListenerInfo(Bundle bundle) {
++        StringBuilder outputString = new StringBuilder();
++
++        outputString.append(SOCKET_INFO);
++        outputString.append(" ");
++        outputString.append(bundle.getString("listenerType"));
++        outputString.append(" ");
++        outputString.append(bundle.getString("listenerID"));
++        outputString.append(" ");
++
++        for (String key : bundle.keySet()) {
++            if (key.equals("listenerType") || key.equals("listenerID")) {
++                continue;
++            }
++
++            outputString.append(key);
++            outputString.append(":");
++            outputString.append(bundle.getString(key));
++            outputString.append(" ");
++        }
++
++        outputString.append("\n");
++
++        //_socketThread.sendToSocket(outputString.toString());
++
++        Message msg = Message.obtain();
++        msg.what = MSG_SOCKET_SEND;
++        msg.obj = outputString.toString();
++        _handler.sendMessage(msg);
++    }
++
++    public void registerNewListener(Bundle bundle) {
++        if (_testPackageName == null) {
++            return;
++        }
++
++        if (!_testPackageName.equals(bundle.getString("packageName"))) {
++            //Slog.i(TAG, "New listener for untested package: " + bundle.getString("packageName"));
++            return;
++        }
++
++        Slog.i(TAG, "Register new listener for package: " + bundle.getString("packageName"));
++        StringBuilder outputString = new StringBuilder();
++
++        outputString.append(SOCKET_NEW_LISTENER);
++        outputString.append(" ");
++        outputString.append(bundle.getString("listenerType"));
++        outputString.append(" ");
++        outputString.append(bundle.getString("listenerID"));
++        outputString.append(" ");
++        outputString.append(bundle.getString("receiverClass"));
++        outputString.append("\n");
++
++        //_socketThread.sendToSocket(outputString.toString());
++
++        Message msg = Message.obtain();
++        msg.what = MSG_SOCKET_SEND;
++        msg.obj = outputString.toString();
++        _handler.sendMessage(msg);
++    }
++
++    public void unregisterRemovedListener(Bundle bundle) {
++        if (_testPackageName == null) {
++            return;
++        }
++
++        if (!_testPackageName.equals(bundle.getString("packageName"))) {
++            return;
++        }
++
++        StringBuilder outputString = new StringBuilder();
++
++        outputString.append(SOCKET_REMOVE_LISTENER);
++        outputString.append(" ");
++        outputString.append(bundle.getString("listenerType"));
++        outputString.append(" ");
++        outputString.append(bundle.getString("listenerID"));
++        outputString.append("\n");
++
++        //_socketThread.sendToSocket(outputString.toString());
++
++        Message msg = Message.obtain();
++        msg.what = MSG_SOCKET_SEND;
++        msg.obj = outputString.toString();
++        _handler.sendMessage(msg);
++    }
++
++    public void triggerLocationChange() {
++        try {
++            Slog.i(TAG, "Triggering location change");
++            Message msg = Message.obtain();
++            msg.what = MSG_TRIGGER_LOCATION_CHANGE;
++            msg.obj = new Integer(1);
++            _handler.sendMessage(msg);
++        } catch (Exception e) {
++            Slog.e(TAG, "Exception: " + e.toString());
++            Slog.e(TAG, Log.getStackTraceString(e));
++        }
++    }
++
++    public void triggerCallStateChange() {
++        try {
++            Message msg = Message.obtain();
++            msg.what = MSG_TRIGGER_CALL_STATE_CHANGE;
++            msg.obj = new Integer(2);
++            _handler.sendMessage(msg);
++        } catch (Exception e) {
++            Slog.e(TAG, "Exception: " + e.toString());
++            Slog.e(TAG, Log.getStackTraceString(e));
++        }
++    }
++
++    public void triggerNewSms() {
++        try {
++            Message msg = Message.obtain();
++            msg.what = MSG_TRIGGER_NEW_SMS;
++            msg.obj = new Integer(3);
++            _handler.sendMessage(msg);
++        } catch (Exception e) {
++            Slog.e(TAG, "Exception: " + e.toString());
++            Slog.e(TAG, Log.getStackTraceString(e));
++        }
++    }
++
++    public void triggerAlarm(long millis) {
++        SystemClock.setCurrentTimeMillis(millis);
++    }
++
++    public void setTime(long millis) {
++        SystemClock.setCurrentTimeMillis(millis);
++    }
++
++    private void triggerLocationChangePrivate() {
++        Slog.i(TAG, "Triggering location change: handleMessage");
++
++        ILocationManager locationService = ILocationManager.Stub.asInterface(ServiceManager.getService(Context.LOCATION_SERVICE));
++        // Some apps request updates less frequency.  Ensure that the callback is always invoked.
++        _lastLatitude = (_lastLatitude + 45.0) % 90.0;
++        _lastLongitude = (_lastLongitude + 360.0) % 360.0 - 180.0;
++        _lastElapsedRealtimeNanos = _lastElapsedRealtimeNanos + (long)1e12;
++
++        try {
++            Location location = new Location(LocationManager.GPS_PROVIDER);
++            location.setLatitude(_lastLatitude);
++            location.setLongitude(_lastLongitude);
++            location.setElapsedRealtimeNanos(_lastElapsedRealtimeNanos);
++            location.makeComplete();
++
++            locationService.reportLocation(location, false);
++
++        } catch (Exception e) {
++            Slog.e(TAG, "Exception: " + e.toString());
++            Slog.e(TAG, Log.getStackTraceString(e));
++        }
++    }
++
++    private void triggerLocationChangePrivate(Location location) {
++        ILocationManager locationService = ILocationManager.Stub.asInterface(ServiceManager.getService(Context.LOCATION_SERVICE));
++
++        try {
++            locationService.reportLocation(location, false);
++
++        } catch (Exception e) {
++            Slog.e(TAG, "Exception: " + e.toString());
++            Slog.e(TAG, Log.getStackTraceString(e));
++        }
++    }
++
++    private Location generateLocation(String[] locationInfo) {
++        Location location = new Location(LocationManager.GPS_PROVIDER);
++        location.makeComplete();
++
++        for (String locationAttribute : locationInfo) {
++            // Match colons only if it has an even number of double quotes after it
++            String[] attribute = locationAttribute.split(":(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
++            //String[] attribute = locationAttribute.split(":");
++
++            if (attribute.length < 2) {
++                continue;
++            }
++
++            String fieldName = attribute[0];
++            String fieldValue = attribute[1].replace("\"", "");
++
++            try {
++                if (fieldName.equals("<Input1>.latitude")) {
++                    location.setLatitude(Double.parseDouble(fieldValue));
++                } else if (fieldName.equals("<Input1>.longitude")) {
++                    location.setLongitude(Double.parseDouble(fieldValue));
++                } else if (fieldName.equals("<Input1>.mIsFromMockProvider")) {
++                    location.setIsFromMockProvider(fieldValue.equals("0") ? false : true);
++                } else if (fieldName.equals("<Input1>.mElapsedRealtimeNanos")) {
++                    location.setElapsedRealtimeNanos(Long.parseLong(fieldValue));
++                } else if (fieldName.equals("<Input1>.mTime")) {
++                    location.setTime(Long.parseLong(fieldValue));
++                } else if (fieldName.equals("<Input1>.provider")) {
++                    location.setProvider(fieldValue);
++                } else if (fieldName.equals("<Input2>")) {
++                }
++            } catch (Exception e) {
++                Slog.e(TAG, "Error parsing: " + e);
++            }
++        }
++
++        return location;
++    }
++
++    private void triggerCallStateChangePrivate() {
++        Slog.i(TAG, "Triggering call state change: handleMessage");
++
++        ITelephonyRegistry telephonyService = ITelephonyRegistry.Stub.asInterface(ServiceManager.getService("telephony.registry"));
++
++        try {
++            telephonyService.notifyCallState(TelephonyManager.CALL_STATE_IDLE, "4165555555");
++        } catch (Exception e) {
++            Slog.e(TAG, "Exception: " + e.toString());
++            Slog.e(TAG, Log.getStackTraceString(e));
++        }
++    }
++
++    private void triggerNewSmsPrivate() {
++        Slog.i(TAG, "Triggering new SMS message: handleMessage");
++
++        try {
++            if (_phone == null) {
++                PhoneFactory.makeDefaultPhone(ActivityThread.currentActivityThread().getSystemContext());
++                _phone = (PhoneBase)((PhoneProxy)PhoneFactory.getDefaultPhone()).getActivePhone();
++            }
++
++            Message msg = Message.obtain();
++            //msg.what = PhoneBase.EVENT_NEW_ICC_SMS;
++            msg.what = 29;
++
++            // Copied pdu from GsmSmsTest
++            //String pdu = "07914151551512f2040B916105551511f100006060605130308A04D4F29C0E";
++
++            // data = "University of Toronto test"
++            String smsc = "07" + "91" + "1326040000F0";
++            String deliverType = "04";
++            String sender = "0B" + "91" + "4161791876F7";
++            String protocol = "00" + "00";
++            //String timestamp = "AA1A5577DA5E96";
++            String timestamp = "41401271323469";
++            String data = "1A" + "5577DA5E96CFD3F43CE86D0651DFF2B79BFE06D1CB733A";
++
++            String pdu = smsc + deliverType + sender + protocol + timestamp + data;
++
++            SmsMessage sms = SmsMessage.createFromPdu(HexDump.hexStringToByteArray(pdu));
++            msg.obj = new AsyncResult(null, sms, null);;
++
++            _phone.sendMessage(msg);
++
++        } catch (Exception e) {
++            Slog.e(TAG, "Exception: " + e.toString());
++            Slog.e(TAG, Log.getStackTraceString(e));
++        }
++    }
++
++    private void triggerNewSmsPrivate(SmsMessage smsMessage) {
++        Slog.i(TAG, "Triggering new SMS message: handleMessage");
++
++        try {
++            if (_phone == null) {
++                PhoneFactory.makeDefaultPhone(ActivityThread.currentActivityThread().getSystemContext());
++                _phone = (PhoneBase)((PhoneProxy)PhoneFactory.getDefaultPhone()).getActivePhone();
++            }
++
++            Message msg = Message.obtain();
++            //msg.what = PhoneBase.EVENT_NEW_ICC_SMS;
++            msg.what = 29;
++            msg.obj = new AsyncResult(null, smsMessage, null);;
++
++            _phone.sendMessage(msg);
++
++        } catch (Exception e) {
++            Slog.e(TAG, "Exception: " + e.toString());
++            Slog.e(TAG, Log.getStackTraceString(e));
++        }
++    }
++
++    private SmsMessage generateSmsMessage(String[] smsInfo) {
++        String smscInfoLength ="07";
++        String smscNumberFormat = "91";
++        String smscNumber = "1326040000F0";
++        String deliverType = "04";
++        String senderNumberLength = "0B";
++        String senderNumberFormat = "91";
++        String senderNumber = "4161791876F7";
++        String protocolID = "00";
++        String dataEncoding = "00";
++        String timestamp = "41401271323469";
++        String userDataLength = "1A";
++        // data = "University of Toronto test"
++        String userData = "5577DA5E96CFD3F43CE86D0651DFF2B79BFE06D1CB733A";
++
++        for (String locationAttribute : smsInfo) {
++            //String[] attribute = locationAttribute.split(":");
++            // Match colons only if it has an even number of double quotes after it
++            String[] attribute = locationAttribute.split(":(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
++
++            if (attribute.length < 2) {
++                continue;
++            }
++
++            String fieldName = attribute[0];
++            String fieldValue = attribute[1].replace("\"", "");
++
++            if (fieldName.equals("smscNumber")) {
++                if (fieldValue.charAt(0) == '+') {
++                    smscNumberFormat = "91";
++                    smscNumber = fieldValue.substring(1);
++                } else if (fieldValue.charAt(0) == '0') {
++                    smscNumberFormat = "91";
++                    smscNumber = fieldValue;
++                } else {
++                    smscNumberFormat = "92";
++                    smscNumber = fieldValue;
++                }
++
++                if (smscNumber.length() % 2 != 0) {
++                    smscNumber += "F";
++                }
++
++                smscNumber = semiOctetToString(smscNumber);
++
++                int length = (smscNumberFormat.length() + smscNumber.length()) / 2;
++
++                if (length < 10) {
++                    smscInfoLength = "0" + Integer.toHexString(length);
++                } else {
++                    smscInfoLength = Integer.toHexString(length);
++                }
++
++            } else if (fieldName.equals("senderNumber")) {
++                if (fieldValue.matches("[+]*[0-9]+[F]*")) {
++                    if (fieldValue.charAt(0) == '+') {
++                        senderNumberFormat = "91";
++                        senderNumber = fieldValue.substring(1);
++                    } else if (fieldValue.charAt(0) == '0') {
++                        senderNumberFormat = "91";
++                        senderNumber = fieldValue;
++                    } else {
++                        // National telephone number type: 1 + 010 + 0001
++                        senderNumberFormat = "A1";
++                        senderNumber = fieldValue;
++                    }
++
++                    if (senderNumber.length() % 2 != 0) {
++                        senderNumber += "F";
++                    }
++
++                    senderNumber = semiOctetToString(senderNumber);
++
++                } else {
++                    senderNumberFormat = "D0";
++                    senderNumber = fieldValue;
++                    senderNumber = packAscii(senderNumber);
++                }
++
++                if (senderNumber.length() < 0xf) {
++                    senderNumberLength = "0" + Integer.toHexString(senderNumber.length());
++                } else {
++                    senderNumberLength = Integer.toHexString(senderNumber.length());
++                }
++
++            } else if (fieldName.equals("timestamp")) {
++                long millis = Long.parseLong(fieldValue);
++                Date date = new Date(millis);
++                SimpleDateFormat dateFormat = new SimpleDateFormat("yyMMddHHmmss");
++                timestamp = dateFormat.format(date);
++
++                int timeZone = dateFormat.getTimeZone().getOffset(millis) / 60000;
++                timestamp += Byte.toString((byte)timeZone);
++                timestamp = semiOctetToString(timestamp);
++
++            } else if (fieldName.equals("userData")) {
++                if (isAscii(fieldValue)) {
++                    if (fieldValue.length() < 0x10) {
++                        userDataLength = "0" + Integer.toHexString(fieldValue.length());
++                    } else {
++                        userDataLength = Integer.toHexString(fieldValue.length());
++                    }
++
++                    String octetFirst = "";
++                    String octetSecond = "";
++                    StringBuilder pduData = new StringBuilder();
++
++                    for (int i = 0; i < fieldValue.length(); i++) {
++                        String current = Integer.toBinaryString((int)fieldValue.charAt(i));
++                        while (current.length() < 7) {
++                            current = "0" + current;
++                        }
++
++                        if (i % 8 == 0) {
++                            octetSecond = current;
++                        } else {
++                            octetFirst = current.substring(7 - (i % 8));
++                            String currentOctet = octetFirst + octetSecond;
++                            String currentOctetHex = Integer.toHexString(Integer.parseInt(currentOctet, 2));
++                            if (currentOctetHex.length() < 2) {
++                                currentOctetHex = "0" + currentOctetHex;
++                            }
++
++                            pduData.append(currentOctetHex);
++
++                            octetSecond = current.substring(0, 7 - (i % 8));
++                        }
++                    }
++
++                    if (!octetSecond.equals("")) {
++                        String currentOctetHex = Integer.toHexString(Integer.parseInt(octetSecond, 2));
++                        if (currentOctetHex.length() < 2) {
++                            currentOctetHex = "0" + currentOctetHex;
++                        }
++
++                        pduData.append(currentOctetHex);
++                    }
++
++                    userData = pduData.toString();
++                } else {
++                    try {
++                        dataEncoding = "08";
++
++                        byte[] userDataBytes = fieldValue.getBytes("UTF-16");
++
++                        StringBuilder pduData = new StringBuilder();
++
++                        for (int i = 0; i < userDataBytes.length; i+=2) {
++                            byte byte1 = userDataBytes[i];
++                            byte byte2 = userDataBytes[i+1];
++
++                            String byte1String = Integer.toHexString(byte1 & 0xFF);
++                            String byte2String = Integer.toHexString(byte2 & 0xFF);
++
++                            if (byte1String.length() < 2) {
++                                byte1String = "0" + byte1String;
++                            }
++
++                            if (byte2String.length() < 2) {
++                                byte2String = "0" + byte2String;
++                            }
++
++                            String octetString = byte2String + byte1String;
++
++                            if (!octetString.equals("fffe") && !octetString.equals("feff") && !octetString.equals("ffff")) {
++                                pduData.append(octetString);
++                            }
++                        }
++
++                        if (pduData.length() / 2 < 0x10) {
++                            userDataLength = "0" + Integer.toHexString(pduData.length() / 2);
++                        } else {
++                            userDataLength = Integer.toHexString(pduData.length() / 2);
++                        }
++
++                        userData = pduData.toString();
++                    } catch (Exception e) {
++                        Slog.e(TAG, e.toString());
++                    }
++                }
++
++            } else if (fieldName.equals("time")) {
++                Long millis = Long.parseLong(fieldValue);
++                Slog.i(TAG, "Setting time: " + millis);
++                SystemClock.setCurrentTimeMillis(millis);
++            }
++        }
++
++        String smsPduString = smscInfoLength + smscNumberFormat + smscNumber + deliverType + senderNumberLength + senderNumberFormat + senderNumber + protocolID + dataEncoding + timestamp + userDataLength + userData;
++
++        Slog.i(TAG, "Generated PDU: " + smsPduString);
++
++        SmsMessage sms = SmsMessage.createFromPdu(HexDump.hexStringToByteArray(smsPduString));
++
++        return sms;
++    }
++
++    private boolean isAscii(String str) {
++        if (str == null) {
++            return false;
++        }
++
++        for (int i = 0; i < str.length(); i++) {
++            char ch = str.charAt(i);
++
++            if (ch < 32 || ch >= 127) {
++                return false;
++            }
++        }
++
++        return true;
++    }
++
++    private void triggerBootSignalPrivate() {
++        Slog.i(TAG, "Triggering BOOT signal");
++
++        try {
++            Context systemContext = ActivityThread.currentActivityThread().getSystemContext();
++            systemContext.sendBroadcast(new Intent("android.intent.action.BOOT_COMPLETED"));
++
++        } catch (Exception e) {
++            Slog.e(TAG, "Exception: " + e.toString());
++            Slog.e(TAG, Log.getStackTraceString(e));
++        }
++    }
++
++    private String semiOctetToString(String input) {
++        StringBuilder output = new StringBuilder();
++
++        for (int i = 0; i < input.length(); i += 2) {
++            String currentByte = input.substring(i, i + 2);
++            output.append(currentByte.charAt(1));
++            output.append(currentByte.charAt(0));
++        }
++
++        return output.toString();
++    }
++
++    private String packAscii(String input) {
++        String octetFirst = "";
++        String octetSecond = "";
++        StringBuilder packedData = new StringBuilder();
++
++        for (int i = 0; i < input.length(); i++) {
++            String current = Integer.toBinaryString((int)input.charAt(i));
++            while (current.length() < 7) {
++                current = "0" + current;
++            }
++
++            if (i % 8 == 0) {
++                octetSecond = current;
++            } else {
++                octetFirst = current.substring(7 - (i % 8));
++                String currentOctet = octetFirst + octetSecond;
++                String currentOctetHex = Integer.toHexString(Integer.parseInt(currentOctet, 2));
++                if (currentOctetHex.length() < 2) {
++                    currentOctetHex = "0" + currentOctetHex;
++                }
++
++                packedData.append(currentOctetHex);
++
++                octetSecond = current.substring(0, 7 - (i % 8));
++            }
++        }
++
++        if (!octetSecond.equals("")) {
++            String currentOctetHex = Integer.toHexString(Integer.parseInt(octetSecond, 2));
++            if (currentOctetHex.length() < 2) {
++                currentOctetHex = "0" + currentOctetHex;
++            }
++
++            packedData.append(currentOctetHex);
++        }
++
++        return packedData.toString();
++    }
++
++    public void setPackageToTest(String packageName) {
++    	Log.i(TAG, "setPackageToTest " + packageName);
++    	_testPackageName = packageName;
++    }
++
++    public String getPackageToTest() {
++    	Log.i(TAG, "getPackageToTest " + _testPackageName);
++    	return _testPackageName;
++    }
++}
+diff --git a/services/java/com/android/server/LocationManagerService.java b/services/java/com/android/server/LocationManagerService.java
+index f784030..f52d52e 100644
+--- a/services/java/com/android/server/LocationManagerService.java
++++ b/services/java/com/android/server/LocationManagerService.java
+@@ -84,6 +84,11 @@ import java.util.List;
+ import java.util.Map;
+ import java.util.Set;
+ 
++// *********** INTELLIDROID MODIFICATIONS ***********
++import android.os.IIntelliDroidService;
++import android.os.ServiceManager;
++// *********** INTELLIDROID MODIFICATIONS ***********
++
+ /**
+  * The service class that manages LocationProviders and issues location
+  * updates and alerts.
+@@ -190,6 +195,11 @@ public class LocationManagerService extends ILocationManager.Stub {
+     // current active user on the device - other users are denied location data
+     private int mCurrentUserId = UserHandle.USER_OWNER;
+ 
++    // *********** INTELLIDROID MODIFICATIONS ***********
++    private Map<Integer, UpdateRecord> mIntelliDroidRecords = new HashMap<Integer, UpdateRecord>();
++    private int mIntelliDroidIndex = 0;
++    // *********** INTELLIDROID MODIFICATIONS ***********
++
+     public LocationManagerService(Context context) {
+         super();
+         mContext = context;
+@@ -566,6 +576,7 @@ public class LocationManagerService extends ILocationManager.Stub {
+         }
+ 
+         public boolean callLocationChangedLocked(Location location) {
++            Slog.w(TAG, "FrameworkAnalysis: LocationManagerService.callLocationChangedLocked()");
+             if (mListener != null) {
+                 try {
+                     synchronized (this) {
+@@ -1118,6 +1129,39 @@ public class LocationManagerService extends ILocationManager.Stub {
+         p.setRequest(providerRequest, worksource);
+     }
+ 
++    // *********** INTELLIDROID MODIFICATIONS ***********
++
++    public Bundle getListenerInfo(int listenerID) {
++        if (!mIntelliDroidRecords.containsKey(listenerID)) {
++            return null;
++        }
++
++        Bundle bundle = new Bundle();
++        UpdateRecord record = mIntelliDroidRecords.get(listenerID);
++
++        bundle.putString("listenerType", "location");
++        bundle.putString("listenerID", Integer.toString(listenerID));
++
++        bundle.putString("<UpdateRecord>.mLastStatusBroadcast", Long.toString(record.mLastStatusBroadcast));
++        bundle.putString("<UpdateRecord>.mReceiver.mAllowedResolutionLevel", Integer.toString(record.mReceiver.mAllowedResolutionLevel));
++        bundle.putString("<UpdateRecord>.mReceiver.mListener", record.mReceiver.mListener == null ? "0" : "1");
++        bundle.putString("<UpdateRecord>.mRequest.getFastestInterval()", Long.toString(record.mRequest.getFastestInterval()));
++        bundle.putString("<UpdateRecord>.mRequest.getSmallestDisplacement()", Float.toString(record.mRequest.getSmallestDisplacement()));
++
++        if (record.mLastFixBroadcast != null) {
++            bundle.putString("<UpdateRecord>.mLastFixBroadcast", "1");
++            bundle.putString("<UpdateRecord>.mLastFixBroadcast.getLatitude()", Double.toString(record.mLastFixBroadcast.getLatitude()));
++            bundle.putString("<UpdateRecord>.mLastFixBroadcast.getLongitude()", Double.toString(record.mLastFixBroadcast.getLongitude()));
++            bundle.putString("<UpdateRecord>.mLastFixBroadcast.getElapsedRealtimeNanos()", Long.toString(record.mLastFixBroadcast.getElapsedRealtimeNanos()));
++        } else {
++            bundle.putString("<UpdateRecord>.mLastFixBroadcast", "0");
++        }
++
++        return bundle;
++    }
++
++    // *********** INTELLIDROID MODIFICATIONS ***********
++
+     private class UpdateRecord {
+         final String mProvider;
+         final LocationRequest mRequest;
+@@ -1141,6 +1185,31 @@ public class LocationManagerService extends ILocationManager.Stub {
+             if (!records.contains(this)) {
+                 records.add(this);
+             }
++
++            // *********** INTELLIDROID MODIFICATIONS ***********
++
++            synchronized (mIntelliDroidRecords) {
++                Slog.i(TAG, "New UpdateRecord with package name: " + mReceiver.mPackageName);
++                mIntelliDroidRecords.put(mIntelliDroidIndex, this);
++
++                Bundle intellidroidBundle = new Bundle();
++                intellidroidBundle.putString("listenerType", "location");
++                intellidroidBundle.putString("listenerID", Integer.toString(mIntelliDroidIndex));
++                intellidroidBundle.putString("packageName", mReceiver.mPackageName);
++                intellidroidBundle.putString("receiverClass", mReceiver.getListener().getClass().getName());
++
++                IIntelliDroidService intellidroidService = IIntelliDroidService.Stub.asInterface(ServiceManager.getService(Context.INTELLIDROID_SERVICE));
++
++                try {
++                    intellidroidService.registerNewListener(intellidroidBundle);
++                } catch (Exception e) {
++                    Slog.e(TAG, e.toString());
++                }
++
++                mIntelliDroidIndex++;
++            }
++
++            // *********** INTELLIDROID MODIFICATIONS ***********
+         }
+ 
+         /**
+@@ -1166,6 +1235,35 @@ public class LocationManagerService extends ILocationManager.Stub {
+                     removeUpdatesLocked(mReceiver);
+                 }
+             }
++
++            // *********** INTELLIDROID MODIFICATIONS ***********
++
++            synchronized (mIntelliDroidRecords) {
++                Slog.i(TAG, "Removing UpdateRecord with package name: " + mReceiver.mPackageName);
++                String recordIndex = null;
++
++                for (Integer index : mIntelliDroidRecords.keySet()) {
++                    if (mIntelliDroidRecords.get(index).equals(this)) {
++                        mIntelliDroidRecords.remove(index);
++                        recordIndex = Integer.toString(index);
++                        break;
++                    }
++                }
++
++                Bundle intellidroidBundle = new Bundle();
++                intellidroidBundle.putString("listenerType", "location");
++                intellidroidBundle.putString("listenerID", recordIndex);
++
++                IIntelliDroidService intellidroidService = IIntelliDroidService.Stub.asInterface(ServiceManager.getService(Context.INTELLIDROID_SERVICE));
++
++                try {
++                    intellidroidService.unregisterRemovedListener(intellidroidBundle);
++                } catch (Exception e) {
++                    Slog.e(TAG, e.toString());
++                }
++            }
++
++            // *********** INTELLIDROID MODIFICATIONS ***********
+         }
+ 
+         @Override
+@@ -1739,6 +1837,7 @@ public class LocationManagerService extends ILocationManager.Stub {
+     }
+ 
+     private void handleLocationChangedLocked(Location location, boolean passive) {
++        Slog.w(TAG, "FrameworkAnalysis: LocationManagerService.handleLocationChangedLocked()");
+         if (D) Log.d(TAG, "incoming location: " + location);
+ 
+         long now = SystemClock.elapsedRealtime();
+@@ -1903,6 +2002,7 @@ public class LocationManagerService extends ILocationManager.Stub {
+ 
+         @Override
+         public void handleMessage(Message msg) {
++            Slog.w(TAG, "FrameworkAnalysis: LocationWorkerHandler.handleMessage()");
+             switch (msg.what) {
+                 case MSG_LOCATION_CHANGED:
+                     handleLocationChanged((Location) msg.obj, msg.arg1 == 1);
+@@ -1918,6 +2018,7 @@ public class LocationManagerService extends ILocationManager.Stub {
+     }
+ 
+     private void handleLocationChanged(Location location, boolean passive) {
++        Slog.w(TAG, "FrameworkAnalysis: LocationManagerService.handleLocationChanged()");
+         // create a working copy of the incoming Location so that the service can modify it without
+         // disturbing the caller's copy
+         Location myLocation = new Location(location);
+diff --git a/services/java/com/android/server/SystemServer.java b/services/java/com/android/server/SystemServer.java
+index 9455017..bd15c9e 100644
+--- a/services/java/com/android/server/SystemServer.java
++++ b/services/java/com/android/server/SystemServer.java
+@@ -66,6 +66,9 @@ import com.android.server.search.SearchManagerService;
+ import com.android.server.usb.UsbService;
+ import com.android.server.wifi.WifiService;
+ import com.android.server.wm.WindowManagerService;
++// *********** INTELLIDROID MODIFICATIONS ***********
++import com.android.server.IntelliDroidService;
++// *********** INTELLIDROID MODIFICATIONS ***********
+ 
+ import dalvik.system.VMRuntime;
+ import dalvik.system.Zygote;
+@@ -153,6 +156,7 @@ class ServerThread extends Thread {
+         CommonTimeManagementService commonTimeMgmtService = null;
+         InputManagerService inputManager = null;
+         TelephonyRegistry telephonyRegistry = null;
++        IntelliDroidService intellidroidService = null;
+ 
+         // Create a shared handler thread for UI within the system server.
+         // This thread is used by at least the following components:
+@@ -374,6 +378,15 @@ class ServerThread extends Thread {
+             } catch (Throwable e) {
+                 reportWtf("starting Accessibility Manager", e);
+             }
++
++			// Register IntelliDroid Service
++			try {
++				Slog.i(TAG, "adding IntelliDroid Service");
++                intellidroidService = new IntelliDroidService(context);
++				ServiceManager.addService(Context.INTELLIDROID_SERVICE, intellidroidService);
++			} catch (Throwable e) {
++				Slog.e(TAG, "Failure starting IntelliDroidService", e);
++			}
+         }
+ 
+         try {
+@@ -857,6 +870,9 @@ class ServerThread extends Thread {
+         final DreamManagerService dreamyF = dreamy;
+         final InputManagerService inputManagerF = inputManager;
+         final TelephonyRegistry telephonyRegistryF = telephonyRegistry;
++        // *********** INTELLIDROID MODIFICATIONS ***********
++        final IntelliDroidService intellidroidServiceF = intellidroidService;
++        // *********** INTELLIDROID MODIFICATIONS ***********
+ 
+         // We now tell the activity manager it is okay to run third party
+         // code.  It will call back into us once it has gotten to the state
+@@ -989,6 +1005,14 @@ class ServerThread extends Thread {
+                 } catch (Throwable e) {
+                     reportWtf("making TelephonyRegistry ready", e);
+                 }
++
++                // *********** INTELLIDROID MODIFICATIONS ***********
++                try {
++                    if (intellidroidServiceF != null) intellidroidServiceF.systemReady();
++                } catch (Throwable e) {
++                    reportWtf("making IntelliDroidService ready", e);
++                }
++                // *********** INTELLIDROID MODIFICATIONS ***********
+             }
+         });
+ 

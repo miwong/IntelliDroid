@@ -1,0 +1,24 @@
+# Commonly misused API methods
+<android.telephony.SmsManager.sendTextMessage(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Landroid/app/PendingIntent;Landroid/app/PendingIntent;)V>
+<android.telephony.gsm.SmsManager.sendTextMessage(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Landroid/app/PendingIntent;Landroid/app/PendingIntent;)V>
+<android.telephony.SmsManager.sendDataMessage(Ljava/lang/String;Ljava/lang/String;S[BLandroid/app/PendingIntent;Landroid/app/PendingIntent;)V>
+<android.telephony.SmsManager.sendMultipartTextMessage(Ljava/lang/String;Ljava/lang/String;Ljava/util/ArrayList;Ljava/util/ArrayList;Ljava/util/ArrayList;)V>
+<android.content.BroadcastReceiver.abortBroadcast()V>
+<android.content.ContentResolver.delete(Landroid/net/Uri;Ljava/lang/String;[Ljava/lang/String;)I>
+
+# HTTP APIs
+<org.apache.http.client.HttpClient.execute(Lorg/apache/http/client/methods/HttpUriRequest;)Lorg/apache/http/HttpResponse;>
+<org.apache.http.impl.client.AbstractHttpClient.execute(Lorg/apache/http/client/methods/HttpUriRequest;)Lorg/apache/http/HttpResponse;>
+<android.net.http.AndroidHttpClient.execute(Lorg/apache/http/client/methods/HttpUriRequest;)Lorg/apache/http/HttpResponse;>
+<sun.net.www.protocol.http.HttpURLConnection.connect()V>
+<java.net.URL.openConnection()Ljava/net/URLConnection;>
+<java.net.URL.openConnection(Ljava/net/Proxy;)Ljava/net/URLConnection;>
+
+#<java.io.DataOutputStream.writeBytes(Ljava/lang/String;)V>
+#<java.io.FileOutputStream.writeBytes([BII)V>
+
+# Reflection
+<java.lang.reflect.Method.invoke(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;>
+<java.lang.ClassLoader.loadClass(Ljava/lang/String;)Ljava/lang/Class;>
+<java.lang.ClassLoader.loadClass(Ljava/lang/String;Z)Ljava/lang/Class;>
+

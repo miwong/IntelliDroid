@@ -1,0 +1,30 @@
+# Repo-specific files
+.DS_Store
+
+# Build files
+FrameworkAnalysis/build/*
+FrameworkAnalysis/.gradle/*
+AppAnalysis/build/*
+AppAnalysis/.gradle/*
+*.pyc
+
+# Output files
+AppAnalysis/*.csv
+AppAnalysis/pathOutput/*
+DynamicClient/.history
+
+# Vim temp files
+*.swp
+*.swo
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files
+#*.jar
+#*.war
+#*.ear
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+

@@ -1,0 +1,93 @@
+# ==============================================================================
+# Sources
+# ==============================================================================
+
+# Location
+<android.location.Location.getLatitude()D>
+<android.location.Location.getLongitude()D>
+<android.location.LocationManager.getLastKnownLocation(Ljava/lang/String;)Landroid/location/Location;>
+<android.telephony.gsm.GsmCellLocation.getCid()I>
+<android.telephony.gsm.GsmCellLocation.getLac()I>
+<android.location.Location.getLongitude()D>
+<android.location.Location.getLatitude()D>
+
+# AccountManager
+<android.accounts.AccountManager.getAccounts()[Landroid/accounts/Account;>
+
+# ContentResolver
+<android.content.ContentResolver.query(Landroid/net/Uri;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;)Landroid/database/Cursor;>
+<android.content.ContentResolver.query(Landroid/net/Uri;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;Landroid/os/CancellationSignal;)Landroid/database/Cursor;>
+<android.content.ContentResolver.insert(Landroid/net/Uri;Landroid/content/ContentValues;)Landroid/net/Uri;>
+<android.content.ContentResolver.delete(Landroid/net/Uri;Ljava/lang/String;[Ljava/lang/String;)I>
+<android.content.ContentResolver.update(Landroid/net/Uri;Landroid/content/ContentValues;Ljava/lang/String;[Ljava/lang/String;)I>
+<android.content.ContentResolver.query(Landroid/net/Uri;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;)Landroid/database/Cursor;>
+<android.content.ContentResolver.query(Landroid/net/Uri;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;Landroid/os/CancellationSignal;)Landroid/database/Cursor;>
+
+# CursorWrapper
+<android.database.CursorWrapper.getDouble(I)D>
+<android.database.CursorWrapper.getFloat(I)F>
+<android.database.CursorWrapper.getInt(I)I>
+<android.database.CursorWrapper.getLong(I)J>
+<android.database.CursorWrapper.getShort(I)S>
+<android.database.CursorWrapper.getString(I)Ljava/lang/String;>
+
+# UI
+<android.app.Activity.findViewById(I)Landroid/view/View;>
+
+# AudioRecord, MediaRecorder
+<android.media.AudioRecord.read([SII)I>
+<android.media.AudioRecord.read([BII)I>
+<android.media.AudioRecord.read(Ljava/nio/ByteBuffer;I)I>
+<android.media.MediaRecorder.setVideoSource(I)V>
+<android.media.MediaRecorder.setPreviewDisplay(Landroid/view/Surface;)V>
+<android.media.MediaRecorder.start()V>
+
+# Camera (handled by file APIs), SensorManager
+<android.hardware.SensorManager.getRotationMatrix([F[F[F[F)Z]]]])>
+<android.hardware.SensorManager.getInclination([F)F])>
+<android.hardware.SensorManager.getOrientation([F[F)[F]]])>
+<android.hardware.SensorManager.getAltitude(FF)F>
+<android.hardware.SensorManager.getAngleChange([F[F[F)V]]])>
+<android.hardware.SensorManager.getRotationMatrixFromVector([F[F)V]])>
+<android.hardware.SensorManager.getQuaternionFromVector([F[F)V]])>
+
+# TelephonyManager
+<android.telephony.TelephonyManager.getDeviceId()Ljava/lang/String;>
+<android.telephony.TelephonyManager.getSubscriberId()Ljava/lang/String;>
+<android.telephony.TelephonyManager.getSimSerialNumber()Ljava/lang/String;>
+<android.telephony.TelephonyManager.getLine1Number()Ljava/lang/String;>
+
+# ==============================================================================
+# Sinks
+# ==============================================================================
+
+# SMS
+<android.telephony.SmsManager.sendTextMessage(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Landroid/app/PendingIntent;Landroid/app/PendingIntent;)V>
+<android.telephony.SmsManager.sendDataMessage(Ljava/lang/String;Ljava/lang/String;S[BLandroid/app/PendingIntent;Landroid/app/PendingIntent;)V>
+<android.telephony.SmsManager.sendMultipartTextMessage(Ljava/lang/String;Ljava/lang/String;Ljava/util/ArrayList;Ljava/util/ArrayList;Ljava/util/ArrayList;)V>
+<android.telephony.gsm.SmsManager.sendTextMessage(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Landroid/app/PendingIntent;Landroid/app/PendingIntent;)V>
+
+# File
+<java.io.OutputStream.write([B)V>
+<java.io.OutputStream.write([BII)V>
+<java.io.OutputStream.write(I)V>
+<java.io.FileOutputStream.write([B)V>
+<java.io.FileOutputStream.write([BII)V>
+<java.io.FileOutputStream.write(I)V>
+<java.io.Writer.write([C)V>
+<java.io.Writer.write([CII)V>
+<java.io.Writer.write(I)V>
+<java.io.Writer.write(Ljava/lang/String;)V>
+<java.io.Writer.write(Ljava/lang/String;II)V>
+
+# Network
+<java.net.URL.set(Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;)V>
+<java.net.URL.set(Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V>
+<org.apache.http.impl.client.DefaultHttpClient.execute(Lorg/apache/http/client/methods/HttpUriRequest;)Lorg/apache/http/HttpResponse;>
+<org.apache.http.client.HttpClient.execute(Lorg/apache/http/client/methods/HttpUriRequest;)Lorg/apache/http/HttpResponse;>
+<java.net.URLConnection.getOutputStream()Ljava/io/OutputStream;>
+<java.net.URLConnection.getInputStream()Ljava/io/InputStream;>
+<java.io.DataOutputStream.writeBytes(Ljava/lang/String;)V>
+<java.io.FileOutputStream.writeBytes([BII)V>
+
+

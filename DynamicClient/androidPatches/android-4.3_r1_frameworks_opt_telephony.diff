@@ -1,0 +1,27 @@
+diff --git a/src/java/android/telephony/SmsManager.java b/src/java/android/telephony/SmsManager.java
+index f3b4735..7cbfb2e 100644
+--- a/src/java/android/telephony/SmsManager.java
++++ b/src/java/android/telephony/SmsManager.java
+@@ -30,6 +30,10 @@ import java.util.ArrayList;
+ import java.util.Arrays;
+ import java.util.List;
+ 
++// *********** INTELLIDROID MODIFICATIONS ***********
++import android.util.Log;
++// *********** INTELLIDROID MODIFICATIONS ***********
++
+ /*
+  * TODO(code review): Curious question... Why are a lot of these
+  * methods not declared as static, since they do not seem to require
+@@ -74,6 +78,11 @@ public final class SmsManager {
+     public void sendTextMessage(
+             String destinationAddress, String scAddress, String text,
+             PendingIntent sentIntent, PendingIntent deliveryIntent) {
++
++        // *********** INTELLIDROID MODIFICATIONS ***********
++        Log.i("IntelliDroid", "sendTextMessage called with destination:" + destinationAddress + "; text:" + text);
++        // *********** INTELLIDROID MODIFICATIONS ***********
++
+         if (TextUtils.isEmpty(destinationAddress)) {
+             throw new IllegalArgumentException("Invalid destinationAddress");
+         }
