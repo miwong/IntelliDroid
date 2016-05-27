@@ -436,7 +436,7 @@ class Expression {
 
     public static Expression combine(Operator operator, Expression left, Expression right) {
         // Handle the CMP operation in a special case
-        if (left.isExpression() && left.getOperator().equals(Operator.CMP)) {
+        if (left != null && left.isExpression() && left.getOperator().equals(Operator.CMP)) {
             left = left.getLeft();
             right = left.getRight();
         }
@@ -469,6 +469,10 @@ class Expression {
     }
 
     public static Expression duplicate(Expression expr) {
+        if (expr == null) {
+            return null;
+        }
+
         if (expr.isVariable()) {
             return new Expression(expr.getVariable(), expr.getType());
         } else if (expr.isExpression()) {
