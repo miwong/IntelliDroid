@@ -436,9 +436,13 @@ class UIActivityMapping {
 
     private TypeReference getUIElementActivity(CGNode node, int uiElementVal) {
         DefUse defUse = node.getDU();
-        SSAInstruction uiElementDef = defUse.getDef(uiElementVal);
-        CGNode uiRegNode = node;
 
+        SSAInstruction uiElementDef = defUse.getDef(uiElementVal);
+        if (uiElementDef == null) {
+            return null;
+        }
+
+        CGNode uiRegNode = node;
         boolean iterate = false;
 
         do {
