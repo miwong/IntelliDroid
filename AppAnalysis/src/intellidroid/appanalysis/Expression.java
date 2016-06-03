@@ -412,6 +412,8 @@ class Expression {
             return Type.DOUBLE;
         } else if (type.equals(TypeReference.JavaLangString) || type.equals(JavaLangAppString)) {
             return Type.STRING;
+        } else if (type.equals(TypeReference.findOrCreate(ClassLoaderReference.Application, "Ljava/lang/CharSequence"))) {
+            return Type.STRING;
         } else {
             return Type.NONE;
         }
