@@ -113,7 +113,7 @@ On the dynamic side, follow the instructions [here](http://www.appanalysis.org/d
 
 ##Contact
 
-IntelliDroid was initially developed as a Master's thesis project by Michelle Wong at the University of Toronto.  
+IntelliDroid was initially developed as a Master's thesis project by Michelle Wong at the University of Toronto, supervised by Dr. David Lie.  
   
 For any inquiries, please contact:
 * Michelle Wong (michelley.wong@mail.utoronto.ca)
