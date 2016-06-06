@@ -39,7 +39,7 @@ distZip {
     into(project.name) {
         from '.'
         include 'wala.properties'
-        include 'suspiciousMethods.txt'
+        include 'targetedMethods.txt'
     }
 
     into(project.name + '/android') {
@@ -67,8 +67,7 @@ run {
         }
     }
 
-    // jvmArgs "-Xmx14g", "-Xms10g", "-XX:NewSize=9g", "-XX:NewRatio=1"
-    jvmArgs "-Xmx12g", "-Xms10g", "-XX:NewSize=8g", "-XX:NewRatio=2"
+    //jvmArgs "-Xmx12g", "-Xms10g", "-XX:NewSize=8g", "-XX:NewRatio=2"
 }
 
 processTestResources.enabled = false
