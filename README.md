@@ -117,10 +117,10 @@ IntelliDroid was initially developed as a Master's thesis project by Michelle Wo
   
 For any inquiries, please contact:
 * Michelle Wong (michelley.wong@mail.utoronto.ca)
-* Dr. David Lie (lie@eecg.toronto.edu)
 
 The following have contributed code to IntelliDroid:
 * Michelle Wong
+* Dr. David Lie
 * Mariana D'Angelo
 * Peter Sun
 
