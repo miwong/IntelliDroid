@@ -393,6 +393,9 @@ class TargetedPathsAnalysis {
                 SSAAbstractInvokeInstruction invokeInstr = (SSAAbstractInvokeInstruction)instr;
                 //MethodReference targetMethod = invokeInstr.getDeclaredTarget();
                 IMethod targetMethod = cha.resolveMethod(invokeInstr.getDeclaredTarget());
+                if (targetMethod == null) {
+                    continue;
+                }
 
                 // TODO: distinguish between registration and de-registration methods
                 String selectorString = targetMethod.getSelector().toString();
