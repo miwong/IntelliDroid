@@ -13,7 +13,7 @@ index 151621c..733c227 100644
  
  
 diff --git a/api/current.txt b/api/current.txt
-index 02b95a0..0fc8443 100644
+index 02b95a0..1274e0a 100644
 --- a/api/current.txt
 +++ b/api/current.txt
 @@ -5708,6 +5708,7 @@ package android.content {
@@ -24,33 +24,7 @@ index 02b95a0..0fc8443 100644
      field public static final java.lang.String KEYGUARD_SERVICE = "keyguard";
      field public static final java.lang.String LAYOUT_INFLATER_SERVICE = "layout_inflater";
      field public static final java.lang.String LOCATION_SERVICE = "location";
-@@ -17151,6 +17152,25 @@ package android.os {
-     method public boolean quitSafely();
-   }
- 
-+  public abstract interface IAndroidMCService implements android.os.IInterface {
-+    method public abstract java.lang.String getPackageToTest() throws android.os.RemoteException;
-+    method public abstract void registerNewListener(android.os.Bundle) throws android.os.RemoteException;
-+    method public abstract void sendListenerInfo(android.os.Bundle) throws android.os.RemoteException;
-+    method public abstract void setPackageToTest(java.lang.String) throws android.os.RemoteException;
-+    method public abstract void setTime(long) throws android.os.RemoteException;
-+    method public abstract void triggerCallStateChange() throws android.os.RemoteException;
-+    method public abstract void triggerLocationChange() throws android.os.RemoteException;
-+    method public abstract void triggerNewSms() throws android.os.RemoteException;
-+    method public abstract void unregisterRemovedListener(android.os.Bundle) throws android.os.RemoteException;
-+  }
-+
-+  public static abstract class IAndroidMCService.Stub extends android.os.Binder implements android.os.IAndroidMCService {
-+    ctor public IAndroidMCService.Stub();
-+    method public android.os.IBinder asBinder();
-+    method public static android.os.IAndroidMCService asInterface(android.os.IBinder);
-+    method public boolean onTransact(int, android.os.Parcel, android.os.Parcel, int) throws android.os.RemoteException;
-+  }
-+
-   public abstract interface IBinder {
-     method public abstract void dump(java.io.FileDescriptor, java.lang.String[]) throws android.os.RemoteException;
-     method public abstract void dumpAsync(java.io.FileDescriptor, java.lang.String[]) throws android.os.RemoteException;
-@@ -17175,10 +17195,39 @@ package android.os {
+@@ -17175,10 +17176,39 @@ package android.os {
      method public abstract void binderDied();
    }
  
@@ -215,8 +189,9 @@ index 5bd28b9..b2bd3ec 100644
       * Determine whether the given permission is allowed for a particular
       * process and user ID running in the system.
 diff --git a/core/java/android/os/IIntelliDroidService.aidl b/core/java/android/os/IIntelliDroidService.aidl
-index e69de29..bf7b2a2 100644
---- a/core/java/android/os/IIntelliDroidService.aidl
+new file mode 100644
+index 0000000..bf7b2a2
+--- /dev/null
 +++ b/core/java/android/os/IIntelliDroidService.aidl
 @@ -0,0 +1,21 @@
 +/*
@@ -241,8 +216,9 @@ index e69de29..bf7b2a2 100644
 +    oneway void unregisterRemovedListener(in Bundle bundle);
 +}
 diff --git a/core/java/android/os/IntelliDroidManager.java b/core/java/android/os/IntelliDroidManager.java
-index e69de29..0cc0afd 100644
---- a/core/java/android/os/IntelliDroidManager.java
+new file mode 100644
+index 0000000..0cc0afd
+--- /dev/null
 +++ b/core/java/android/os/IntelliDroidManager.java
 @@ -0,0 +1,78 @@
 +package android.os;
@@ -440,8 +416,9 @@ index fa758a8..08fdc55 100644
              // Display the list of alarms for this alarm type
              Slog.v(TAG, "alarms: " + alarmList.size() + " type: " + alarm.type);
 diff --git a/services/java/com/android/server/IntelliDroidService.java b/services/java/com/android/server/IntelliDroidService.java
-index e69de29..7a72262 100644
---- a/services/java/com/android/server/IntelliDroidService.java
+new file mode 100644
+index 0000000..78ce857
+--- /dev/null
 +++ b/services/java/com/android/server/IntelliDroidService.java
 @@ -0,0 +1,859 @@
 +package com.android.server;
@@ -716,7 +693,7 @@ index e69de29..7a72262 100644
 +    }
 +
 +    public IntelliDroidService(Context context) {
-+    	super();
++        super();
 +    }
 +
 +    public void systemReady() {
@@ -1294,13 +1271,13 @@ index e69de29..7a72262 100644
 +    }
 +
 +    public void setPackageToTest(String packageName) {
-+    	Log.i(TAG, "setPackageToTest " + packageName);
-+    	_testPackageName = packageName;
++        Log.i(TAG, "setPackageToTest " + packageName);
++        _testPackageName = packageName;
 +    }
 +
 +    public String getPackageToTest() {
-+    	Log.i(TAG, "getPackageToTest " + _testPackageName);
-+    	return _testPackageName;
++        Log.i(TAG, "getPackageToTest " + _testPackageName);
++        return _testPackageName;
 +    }
 +}
 diff --git a/services/java/com/android/server/LocationManagerService.java b/services/java/com/android/server/LocationManagerService.java
