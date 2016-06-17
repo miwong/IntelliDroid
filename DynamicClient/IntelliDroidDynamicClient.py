@@ -134,7 +134,7 @@ class IntelliDroidDynamicClient:
             elif constraint["type"] == "service":
                 self.triggerService(constraint)
             else:
-                print("Not implemeneted: " + constraint["type"])
+                print("Not implemented: " + constraint["type"])
 
 
     def triggerLocation(self, listenerID):
