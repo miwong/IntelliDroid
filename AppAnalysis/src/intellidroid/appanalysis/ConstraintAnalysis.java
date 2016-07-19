@@ -397,16 +397,20 @@ class ConstraintAnalysis {
             Queue<ISSABasicBlock> blockQueue = new LinkedList<ISSABasicBlock>();
             blockQueue.addAll(cfg.getNormalSuccessors(cfg.entry()));
 
+            Set<ISSABasicBlock> queuedBlocks = new HashSet<ISSABasicBlock>();
+            queuedBlocks.addAll(cfg.getNormalSuccessors(cfg.entry()));
+
             // List of already processed blocks (to avoid infinite loops)
             Set<ISSABasicBlock> processedBlocks = new HashSet<ISSABasicBlock>();
             processedBlocks.add(cfg.entry());
 
             // Keep track of blocks that couldn't be processed previously due to
             // loop dependencies
-            Set<ISSABasicBlock> predBlockedBlocks = new HashSet<ISSABasicBlock>();
+            //Set<ISSABasicBlock> predBlockedBlocks = new HashSet<ISSABasicBlock>();
 
             while (!blockQueue.isEmpty()) {
                 ISSABasicBlock block = blockQueue.poll();
+                queuedBlocks.remove(block);
 
                 if (processedBlocks.contains(block)) {
                     continue;
@@ -422,21 +426,30 @@ class ConstraintAnalysis {
 
                 // Propagate constraints and data from predecessor blocks
                 for (ISSABasicBlock predBlock : predBlocks) {
+                    Output.debug(DEBUG, "    pred: " + predBlock.getNumber());
+
                     if (!processedBlocks.contains(predBlock) && !predBlock.equals(block)) {
                         if (!backedges.contains(predBlock.getNumber(), block.getNumber())) {
                             // Ensure we do not have a cyclical pred block
-                            if (!predBlockedBlocks.contains(predBlock)) {
-                                predBlockedBlocks.add(block);
+                            //if (!predBlockedBlocks.contains(predBlock)) {
+                                //predBlockedBlocks.add(block);
 
-                                blockQueue.offer(predBlock);
+                                if (!queuedBlocks.contains(predBlock)) {
+                                    blockQueue.offer(predBlock);
+                                    queuedBlocks.add(predBlock);
+                                }
+
                                 blockQueue.offer(block);
+                                queuedBlocks.add(block);
+
                                 predBlocked = true;
                                 break;
-                            }
+                            //}
                         }
                     }
 
                     if (!dataPropagationMap.containsKey(predBlock)) {
+                        Output.debug(DEBUG, "        pred block not in data propagation map");
                         continue;
                     }
 
@@ -506,11 +519,11 @@ class ConstraintAnalysis {
 
                             propagatedConstraints = new Predicate(Predicate.Operator.OR, propagatedConstraints, predConstraint);
                         }
-
                     }
                 }
 
                 if (predBlocked) {
+                    Output.debug(DEBUG, "    blocked by predecessor block");
                     continue;
                 }
 
@@ -580,14 +593,32 @@ class ConstraintAnalysis {
                     ISSABasicBlock notTakenBlock = Util.getNotTakenSuccessor(cfg, block);
 
                     if (needTaken > 0) {
-                        blockQueue.offer(takenBlock);
+                        if (!queuedBlocks.contains(takenBlock)) {
+                            blockQueue.offer(takenBlock);
+                            queuedBlocks.add(takenBlock);
+                        }
                     } else if (needTaken < 0) {
-                        blockQueue.offer(notTakenBlock);
+                        if (!queuedBlocks.contains(notTakenBlock)) {
+                            blockQueue.offer(notTakenBlock);
+                            queuedBlocks.add(notTakenBlock);
+                        }
                     } else {
-                        blockQueue.addAll(cfg.getNormalSuccessors(block));
+                        //blockQueue.addAll(cfg.getNormalSuccessors(block));
+                        for (ISSABasicBlock succBlock : cfg.getNormalSuccessors(block)) {
+                            if (!queuedBlocks.contains(succBlock)) {
+                                blockQueue.offer(succBlock);
+                                queuedBlocks.add(succBlock);
+                            }
+                        }
                     }
                 } else {
-                    blockQueue.addAll(cfg.getNormalSuccessors(block));
+                    //blockQueue.addAll(cfg.getNormalSuccessors(block));
+                    for (ISSABasicBlock succBlock : cfg.getNormalSuccessors(block)) {
+                        if (!queuedBlocks.contains(succBlock)) {
+                            blockQueue.offer(succBlock);
+                            queuedBlocks.add(succBlock);
+                        }
+                    }
                 }
 
                 processedBlocks.add(block);
@@ -597,7 +628,7 @@ class ConstraintAnalysis {
 
         if (DEBUG) {
             Output.debug(DEBUG, "-----------------------------------");
-            Output.debug(DEBUG, "Propagation for :" + node.toString());
+            Output.debug(DEBUG, "Propagation for: " + node.toString());
             Map<Integer, ExpressionGroup> dataMap = dataPropagationMap.get(targetBlock);
 
             for (Integer dataVal : dataMap.keySet()) {
