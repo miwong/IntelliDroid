@@ -397,16 +397,13 @@ class ConstraintAnalysis {
             Queue<ISSABasicBlock> blockQueue = new LinkedList<ISSABasicBlock>();
             blockQueue.addAll(cfg.getNormalSuccessors(cfg.entry()));
 
+            // For better performance, make queue unique
             Set<ISSABasicBlock> queuedBlocks = new HashSet<ISSABasicBlock>();
             queuedBlocks.addAll(cfg.getNormalSuccessors(cfg.entry()));
 
             // List of already processed blocks (to avoid infinite loops)
             Set<ISSABasicBlock> processedBlocks = new HashSet<ISSABasicBlock>();
             processedBlocks.add(cfg.entry());
-
-            // Keep track of blocks that couldn't be processed previously due to
-            // loop dependencies
-            //Set<ISSABasicBlock> predBlockedBlocks = new HashSet<ISSABasicBlock>();
 
             while (!blockQueue.isEmpty()) {
                 ISSABasicBlock block = blockQueue.poll();
@@ -430,21 +427,16 @@ class ConstraintAnalysis {
 
                     if (!processedBlocks.contains(predBlock) && !predBlock.equals(block)) {
                         if (!backedges.contains(predBlock.getNumber(), block.getNumber())) {
-                            // Ensure we do not have a cyclical pred block
-                            //if (!predBlockedBlocks.contains(predBlock)) {
-                                //predBlockedBlocks.add(block);
+                            if (!queuedBlocks.contains(predBlock)) {
+                                blockQueue.offer(predBlock);
+                                queuedBlocks.add(predBlock);
+                            }
 
-                                if (!queuedBlocks.contains(predBlock)) {
-                                    blockQueue.offer(predBlock);
-                                    queuedBlocks.add(predBlock);
-                                }
+                            blockQueue.offer(block);
+                            queuedBlocks.add(block);
 
-                                blockQueue.offer(block);
-                                queuedBlocks.add(block);
-
-                                predBlocked = true;
-                                break;
-                            //}
+                            predBlocked = true;
+                            break;
                         }
                     }
 
@@ -550,19 +542,19 @@ class ConstraintAnalysis {
                     }
                 }
 
-                if (DEBUG) {
-                    for (Integer dataVal : dataPropagation.keySet()) {
-                        String dataName;
+                //if (DEBUG) {
+                //    for (Integer dataVal : dataPropagation.keySet()) {
+                //        String dataName;
 
-                        if (node.getIR().getLocalNames(0, dataVal) != null) {
-                            dataName = node.getIR().getLocalNames(0, dataVal)[0];
-                        } else {
-                            dataName = node.getIR().getSymbolTable().getValueString(dataVal);
-                        }
+                //        if (node.getIR().getLocalNames(0, dataVal) != null) {
+                //            dataName = node.getIR().getLocalNames(0, dataVal)[0];
+                //        } else {
+                //            dataName = node.getIR().getSymbolTable().getValueString(dataVal);
+                //        }
 
-                        Output.debug(DEBUG, dataName + " maps to " + dataPropagation.get(dataVal).toString());
-                    }
-                }
+                //        Output.debug(DEBUG, dataName + " maps to " + dataPropagation.get(dataVal).toString());
+                //    }
+                //}
 
                 // Add block information to hash maps
                 if (!dataPropagationMap.containsKey(block) || !dataPropagationMap.get(block).equals(dataPropagation)) {
@@ -631,17 +623,17 @@ class ConstraintAnalysis {
             Output.debug(DEBUG, "Propagation for: " + node.toString());
             Map<Integer, ExpressionGroup> dataMap = dataPropagationMap.get(targetBlock);
 
-            for (Integer dataVal : dataMap.keySet()) {
-                String dataName;
+            //for (Integer dataVal : dataMap.keySet()) {
+            //    String dataName;
 
-                if (node.getIR().getLocalNames(0, dataVal) != null) {
-                    dataName = node.getIR().getLocalNames(0, dataVal)[0];
-                } else {
-                    dataName = node.getIR().getSymbolTable().getValueString(dataVal);
-                }
+            //    if (node.getIR().getLocalNames(0, dataVal) != null) {
+            //        dataName = node.getIR().getLocalNames(0, dataVal)[0];
+            //    } else {
+            //        dataName = node.getIR().getSymbolTable().getValueString(dataVal);
+            //    }
 
-                Output.debug(DEBUG, dataName + " maps to " + dataMap.get(dataVal).toString());
-            }
+            //    Output.debug(DEBUG, dataName + " maps to " + dataMap.get(dataVal).toString());
+            //}
 
             Output.debug(DEBUG, "-----------------------------------");
 
