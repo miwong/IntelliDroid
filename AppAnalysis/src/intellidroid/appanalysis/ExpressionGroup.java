@@ -98,7 +98,11 @@ class ExpressionGroup {
         ExpressionGroup result = new ExpressionGroup();
 
         for (Expression leftExpr : leftExprGrp.toList()) {
-            result.add(Expression.combine(operator, leftExpr, rightExpr));
+            if (leftExpr.isExpression() && leftExpr.getOperator().equals(Expression.Operator.CMP)) {
+                result.add(Expression.combine(operator, leftExpr.getLeft(), leftExpr.getRight()));
+            } else {
+                result.add(Expression.combine(operator, leftExpr, rightExpr));
+            }
         }
 
         return result;
@@ -116,7 +120,11 @@ class ExpressionGroup {
         ExpressionGroup result = new ExpressionGroup();
 
         for (Expression rightExpr : rightExprGrp.toList()) {
-            result.add(Expression.combine(operator, leftExpr, rightExpr));
+            if (leftExpr.isExpression() && leftExpr.getOperator().equals(Expression.Operator.CMP)) {
+                result.add(Expression.combine(operator, leftExpr.getLeft(), leftExpr.getRight()));
+            } else {
+                result.add(Expression.combine(operator, leftExpr, rightExpr));
+            }
         }
 
         return result;
@@ -135,8 +143,11 @@ class ExpressionGroup {
 
         for (Expression leftExpr : leftExprGrp.toList()) {
             for (Expression rightExpr : rightExprGrp.toList()) {
-                Expression newExpr = Expression.combine(operator, leftExpr, rightExpr);
-                result.add(newExpr);
+                if (leftExpr.isExpression() && leftExpr.getOperator().equals(Expression.Operator.CMP)) {
+                    result.add(Expression.combine(operator, leftExpr.getLeft(), leftExpr.getRight()));
+                } else {
+                    result.add(Expression.combine(operator, leftExpr, rightExpr));
+                }
             }
         }
 
@@ -156,7 +167,11 @@ class ExpressionGroup {
 
         for (Expression leftExpr : leftExprGrp.toList()) {
             for (Expression rightExpr : rightExprGrp.toList()) {
-                result.add(Expression.combine(operator, leftExpr, rightExpr));
+                if (leftExpr.isExpression() && leftExpr.getOperator().equals(Expression.Operator.CMP)) {
+                    result.add(Expression.combine(operator, leftExpr.getLeft(), leftExpr.getRight()));
+                } else {
+                    result.add(Expression.combine(operator, leftExpr, rightExpr));
+                }
             }
         }
 
@@ -176,7 +191,11 @@ class ExpressionGroup {
 
         for (Expression leftExpr : leftExprGrp.toList()) {
             for (Expression rightExpr : rightExprGrp.toList()) {
-                result.add(Expression.combine(operator, leftExpr, rightExpr));
+                if (leftExpr.isExpression() && leftExpr.getOperator().equals(Expression.Operator.CMP)) {
+                    result.add(Expression.combine(operator, leftExpr.getLeft(), leftExpr.getRight()));
+                } else {
+                    result.add(Expression.combine(operator, leftExpr, rightExpr));
+                }
             }
         }
 

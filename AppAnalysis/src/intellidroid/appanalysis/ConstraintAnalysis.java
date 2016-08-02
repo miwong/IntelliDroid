@@ -413,7 +413,7 @@ class ConstraintAnalysis {
                     continue;
                 }
 
-                Output.debug(DEBUG, "Processing block: " + block.getNumber());
+                //Output.debug(DEBUG, "Processing block: " + block.getNumber());
 
                 Map<Integer, ExpressionGroup> dataPropagation = new HashMap<Integer, ExpressionGroup>();
                 Predicate propagatedConstraints = null;
@@ -423,7 +423,7 @@ class ConstraintAnalysis {
 
                 // Propagate constraints and data from predecessor blocks
                 for (ISSABasicBlock predBlock : predBlocks) {
-                    Output.debug(DEBUG, "    pred: " + predBlock.getNumber());
+                    //Output.debug(DEBUG, "    pred: " + predBlock.getNumber());
 
                     if (!processedBlocks.contains(predBlock) && !predBlock.equals(block)) {
                         if (!backedges.contains(predBlock.getNumber(), block.getNumber())) {
@@ -441,7 +441,7 @@ class ConstraintAnalysis {
                     }
 
                     if (!dataPropagationMap.containsKey(predBlock)) {
-                        Output.debug(DEBUG, "        pred block not in data propagation map");
+                        //Output.debug(DEBUG, "        pred block not in data propagation map");
                         continue;
                     }
 
@@ -542,19 +542,19 @@ class ConstraintAnalysis {
                     }
                 }
 
-                //if (DEBUG) {
-                //    for (Integer dataVal : dataPropagation.keySet()) {
-                //        String dataName;
+                if (DEBUG) {
+                    for (Integer dataVal : dataPropagation.keySet()) {
+                        String dataName;
 
-                //        if (node.getIR().getLocalNames(0, dataVal) != null) {
-                //            dataName = node.getIR().getLocalNames(0, dataVal)[0];
-                //        } else {
-                //            dataName = node.getIR().getSymbolTable().getValueString(dataVal);
-                //        }
+                        if (node.getIR().getLocalNames(0, dataVal) != null) {
+                            dataName = node.getIR().getLocalNames(0, dataVal)[0];
+                        } else {
+                            dataName = node.getIR().getSymbolTable().getValueString(dataVal);
+                        }
 
-                //        Output.debug(DEBUG, dataName + " maps to " + dataPropagation.get(dataVal).toString());
-                //    }
-                //}
+                        Output.debug(DEBUG, dataName + " maps to " + dataPropagation.get(dataVal).toString());
+                    }
+                }
 
                 // Add block information to hash maps
                 if (!dataPropagationMap.containsKey(block) || !dataPropagationMap.get(block).equals(dataPropagation)) {
