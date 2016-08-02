@@ -108,7 +108,7 @@ class TargetedPathsAnalysis {
         String appInfoFileName = "appInfo.json";
 
         try {
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();;
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
             PrintWriter appInfoWriter = new PrintWriter(IntelliDroidAppAnalysis.Config.OutputDirectory + "/" + appInfoFileName, "UTF-8");
             appInfoWriter.print(gson.toJson(appInfoJson));
             appInfoWriter.close();
