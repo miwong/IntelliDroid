@@ -439,8 +439,9 @@ class Expression {
     public static Expression combine(Operator operator, Expression left, Expression right) {
         // Handle the CMP operation in a special case
         if (left != null && left.isExpression() && left.getOperator().equals(Operator.CMP)) {
-            left = left.getLeft();
-            right = left.getRight();
+            Expression oldExpr = left;
+            left = oldExpr.getLeft();
+            right = oldExpr.getRight();
         }
 
         if (left == null && right == null) {
