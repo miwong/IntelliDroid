@@ -39,7 +39,7 @@ class ExpressionGroup {
         Predicate pred = null;
 
         for (Expression expr : _expressions) {
-            pred = Predicate.combine(Predicate.Operator.OR, pred, new Predicate(expr));
+            pred = Predicate.combine(Predicate.Operator.AND, pred, new Predicate(expr));
         }
 
         return pred;
