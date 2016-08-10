@@ -124,3 +124,7 @@ The following have contributed code to IntelliDroid:
 * Mariana D'Angelo
 * Peter Sun
 
+##License
+
+IntelliDroid is released under the [MIT License](https://opensource.org/licenses/MIT).  
+
