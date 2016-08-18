@@ -386,7 +386,7 @@ class UIActivityMapping {
             iterate = false;
 
             //if (DEBUG) {
-            //    System.out.println("def chain: " + callbackRegNode);
+            //    System.out.println("def chain (registration): " + callbackRegNode);
             //}
 
             if (callbackDefInstr instanceof SSANewInstruction) {
@@ -414,19 +414,23 @@ class UIActivityMapping {
                                     continue;
                                 }
 
-                                DefUse storeDefUse = storeNode.getDU();
-                                callbackDefInstr = storeDefUse.getDef(putInstr.getVal());
-                                callbackRegNode = storeNode;
-                                iterate = true;
+                                SSAInstruction nextDef = storeNode.getDU().getDef(putInstr.getVal());
+                                if (!nextDef.equals(callbackDefInstr)) {
+                                    callbackDefInstr = nextDef;
+                                    callbackRegNode = storeNode;
+                                    iterate = true;
+                                }
                             }
                         }
                     }
                 }
             } else {
                 if (callbackDefInstr != null && callbackDefInstr.getNumberOfUses() == 1) {
-                    DefUse regDefUse = callbackRegNode.getDU();
-                    callbackDefInstr = regDefUse.getDef(callbackDefInstr.getUse(0));
-                    iterate = true;
+                    SSAInstruction nextDef = callbackRegNode.getDU().getDef(callbackDefInstr.getUse(0));
+                    if (!nextDef.equals(callbackDefInstr)) {
+                        callbackDefInstr = nextDef;
+                        iterate = true;
+                    }
                 }
             }
         } while (iterate && callbackRegNode != null && callbackDefInstr != null);
@@ -448,9 +452,9 @@ class UIActivityMapping {
         do {
             iterate = false;
 
-            if (DEBUG) {
-                //System.out.println("    def chain: " + uiElementDef);
-            }
+            //if (DEBUG) {
+            //    System.out.println("    def chain (activity): " + uiElementDef);
+            //}
 
             if (uiElementDef instanceof SSAAbstractInvokeInstruction) {
                 SSAAbstractInvokeInstruction uiInvokeInstr = (SSAAbstractInvokeInstruction)uiElementDef;
@@ -464,8 +468,11 @@ class UIActivityMapping {
                         TypeReference activity = uiRegNode.getMethod().getDeclaringClass().getReference();
                         return activity;
                     } else {
-                        uiElementDef = uiRegNode.getDU().getDef(uiInvokeInstr.getReceiver());
-                        iterate = true;
+                        SSAInstruction nextDef = uiRegNode.getDU().getDef(uiInvokeInstr.getReceiver());
+                        if (!nextDef.equals(uiElementDef)) {
+                            uiElementDef = nextDef;
+                            iterate = true;
+                        }
                     }
                     //SymbolTable regSymbolTable = uiRegNode.getIR().getSymbolTable();
 
@@ -479,8 +486,11 @@ class UIActivityMapping {
                 } else if (targetSelectorString.equals("findViewById(I)Landroid/view/View;") || 
                            targetSelectorString.startsWith("findViewWith")) {
                     // Handle view searches within a View object
-                    uiElementDef = uiRegNode.getDU().getDef(uiInvokeInstr.getUse(0));
-                    iterate = true;
+                    SSAInstruction nextDef = uiRegNode.getDU().getDef(uiInvokeInstr.getUse(0));
+                    if (!nextDef.equals(uiElementDef)) {
+                        uiElementDef = nextDef;
+                        iterate = true;
+                    }
                 }
 
             } else if (uiElementDef instanceof SSAGetInstruction) {
@@ -504,11 +514,13 @@ class UIActivityMapping {
                                     continue;
                                 }
 
-                                DefUse storeDefUse = storeNode.getDU();
-                                uiElementDef = storeDefUse.getDef(putInstr.getVal());
-                                uiRegNode = storeNode;
-                                iterate = true;
-                                break;
+                                SSAInstruction nextDef = storeNode.getDU().getDef(putInstr.getVal());
+                                if (!nextDef.equals(uiElementDef)) {
+                                    uiElementDef = nextDef;
+                                    uiRegNode = storeNode;
+                                    iterate = true;
+                                    break;
+                                }
                             }
                         }
                     }
@@ -525,25 +537,33 @@ class UIActivityMapping {
 
                     SSAAbstractInvokeInstruction useInvokeInstr = (SSAAbstractInvokeInstruction)useInstr;
                     if (useInvokeInstr.getDeclaredTarget().getSelector().toString().startsWith("addView(Landroid/view/View;")) {
-                        uiElementDef = uiRegNode.getDU().getDef(useInvokeInstr.getUse(0));
-                        iterate = true;
-                        break;
+                        SSAInstruction nextDef = uiRegNode.getDU().getDef(useInvokeInstr.getUse(0));
+                        if (!nextDef.equals(uiElementDef)) {
+                            uiElementDef = nextDef;
+                            iterate = true;
+                            break;
+                        }
                     } else if (useInvokeInstr.getDeclaredTarget().getSignature().startsWith("android.app.AlertDialog.<init>(Landroid/content/Context;)")) {
                         if (useInvokeInstr.getUse(1) == 1) {
                             TypeReference activity = uiRegNode.getMethod().getDeclaringClass().getReference();
                             return activity;
                         } else {
-                            uiElementDef = uiRegNode.getDU().getDef(useInvokeInstr.getUse(1));
-                            iterate = true;
-                            break;
+                            SSAInstruction nextDef = uiRegNode.getDU().getDef(useInvokeInstr.getUse(1));
+                            if (!nextDef.equals(uiElementDef)) {
+                                uiElementDef = nextDef;
+                                iterate = true;
+                                break;
+                            }
                         }
                     }
                 }
             } else {
                 if (uiElementDef.getNumberOfUses() == 1) {
-                    DefUse regDefUse = uiRegNode.getDU();
-                    uiElementDef = regDefUse.getDef(uiElementDef.getUse(0));
-                    iterate = true;
+                    SSAInstruction nextDef = uiRegNode.getDU().getDef(uiElementDef.getUse(0));
+                    if (!nextDef.equals(uiElementDef)) {
+                        uiElementDef = nextDef;
+                        iterate = true;
+                    }
                 }
             }
 
