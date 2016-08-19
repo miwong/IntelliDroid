@@ -101,6 +101,7 @@ class ManifestAnalysis {
 
         } catch (Exception e) {
             System.err.println("Exception: " + e.toString());
+            e.printStackTrace();
         }
 
     }

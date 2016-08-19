@@ -415,7 +415,7 @@ class UIActivityMapping {
                                 }
 
                                 SSAInstruction nextDef = storeNode.getDU().getDef(putInstr.getVal());
-                                if (!nextDef.equals(callbackDefInstr)) {
+                                if (nextDef != null && !nextDef.equals(callbackDefInstr)) {
                                     callbackDefInstr = nextDef;
                                     callbackRegNode = storeNode;
                                     iterate = true;
@@ -427,7 +427,7 @@ class UIActivityMapping {
             } else {
                 if (callbackDefInstr != null && callbackDefInstr.getNumberOfUses() == 1) {
                     SSAInstruction nextDef = callbackRegNode.getDU().getDef(callbackDefInstr.getUse(0));
-                    if (!nextDef.equals(callbackDefInstr)) {
+                    if (nextDef != null && !nextDef.equals(callbackDefInstr)) {
                         callbackDefInstr = nextDef;
                         iterate = true;
                     }
@@ -469,7 +469,7 @@ class UIActivityMapping {
                         return activity;
                     } else {
                         SSAInstruction nextDef = uiRegNode.getDU().getDef(uiInvokeInstr.getReceiver());
-                        if (!nextDef.equals(uiElementDef)) {
+                        if (nextDef != null && !nextDef.equals(uiElementDef)) {
                             uiElementDef = nextDef;
                             iterate = true;
                         }
@@ -487,7 +487,7 @@ class UIActivityMapping {
                            targetSelectorString.startsWith("findViewWith")) {
                     // Handle view searches within a View object
                     SSAInstruction nextDef = uiRegNode.getDU().getDef(uiInvokeInstr.getUse(0));
-                    if (!nextDef.equals(uiElementDef)) {
+                    if (nextDef != null && !nextDef.equals(uiElementDef)) {
                         uiElementDef = nextDef;
                         iterate = true;
                     }
@@ -500,26 +500,28 @@ class UIActivityMapping {
                 if (pKey != null) {
                     Set<CGNode> storeNodes = _callGraphInfoListener.getHeapStoreNodes(pKey);
 
-                    for (CGNode storeNode : storeNodes) {
-                        //if (storeNode.equals(uiRegNode) || storeNode.equals(node)) {
-                        //    continue;
-                        //}
+                    if (storeNodes != null) {
+                        for (CGNode storeNode : storeNodes) {
+                            //if (storeNode.equals(uiRegNode) || storeNode.equals(node)) {
+                            //    continue;
+                            //}
 
-                        for (SSAInstruction nodeInstr : storeNode.getIR().getInstructions()) {
-                            if (nodeInstr instanceof SSAPutInstruction) {
-                                SSAPutInstruction putInstr = (SSAPutInstruction)nodeInstr;
+                            for (SSAInstruction nodeInstr : storeNode.getIR().getInstructions()) {
+                                if (nodeInstr instanceof SSAPutInstruction) {
+                                    SSAPutInstruction putInstr = (SSAPutInstruction)nodeInstr;
 
-                                PointerKey putPKey = _callGraphInfoListener.getPointerKeyForFieldAccess(storeNode, putInstr, _pointerAnalysis);
-                                if (putPKey == null || !putPKey.equals(pKey)) {
-                                    continue;
-                                }
+                                    PointerKey putPKey = _callGraphInfoListener.getPointerKeyForFieldAccess(storeNode, putInstr, _pointerAnalysis);
+                                    if (putPKey == null || !putPKey.equals(pKey)) {
+                                        continue;
+                                    }
 
-                                SSAInstruction nextDef = storeNode.getDU().getDef(putInstr.getVal());
-                                if (!nextDef.equals(uiElementDef)) {
-                                    uiElementDef = nextDef;
-                                    uiRegNode = storeNode;
-                                    iterate = true;
-                                    break;
+                                    SSAInstruction nextDef = storeNode.getDU().getDef(putInstr.getVal());
+                                    if (nextDef != null && !nextDef.equals(uiElementDef)) {
+                                        uiElementDef = nextDef;
+                                        uiRegNode = storeNode;
+                                        iterate = true;
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -538,7 +540,7 @@ class UIActivityMapping {
                     SSAAbstractInvokeInstruction useInvokeInstr = (SSAAbstractInvokeInstruction)useInstr;
                     if (useInvokeInstr.getDeclaredTarget().getSelector().toString().startsWith("addView(Landroid/view/View;")) {
                         SSAInstruction nextDef = uiRegNode.getDU().getDef(useInvokeInstr.getUse(0));
-                        if (!nextDef.equals(uiElementDef)) {
+                        if (nextDef != null && !nextDef.equals(uiElementDef)) {
                             uiElementDef = nextDef;
                             iterate = true;
                             break;
@@ -549,7 +551,7 @@ class UIActivityMapping {
                             return activity;
                         } else {
                             SSAInstruction nextDef = uiRegNode.getDU().getDef(useInvokeInstr.getUse(1));
-                            if (!nextDef.equals(uiElementDef)) {
+                            if (nextDef != null && !nextDef.equals(uiElementDef)) {
                                 uiElementDef = nextDef;
                                 iterate = true;
                                 break;
@@ -560,7 +562,7 @@ class UIActivityMapping {
             } else {
                 if (uiElementDef.getNumberOfUses() == 1) {
                     SSAInstruction nextDef = uiRegNode.getDU().getDef(uiElementDef.getUse(0));
-                    if (!nextDef.equals(uiElementDef)) {
+                    if (nextDef != null && !nextDef.equals(uiElementDef)) {
                         uiElementDef = nextDef;
                         iterate = true;
                     }
