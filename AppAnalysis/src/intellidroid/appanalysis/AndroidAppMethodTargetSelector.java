@@ -186,7 +186,7 @@ class AndroidAppMethodTargetSelector implements MethodTargetSelector {
 
                     SSAAbstractInvokeInstruction callInstr = (SSAAbstractInvokeInstruction)ir.getPEI(new ProgramCounter(site.getProgramCounter()));
                     int intentVal = callInstr.getUse(1);
-                    if (!AndroidMethods.isIntentClass(declaredMethod.getParameterType(1))) {
+                    if (!AndroidMethods.isIntentClass(declaredMethod.getParameterType(1)) && callInstr.getNumberOfUses() > 2) {
                         intentVal = callInstr.getUse(2);
                     }
 
