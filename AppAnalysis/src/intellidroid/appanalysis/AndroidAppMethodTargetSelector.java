@@ -625,8 +625,9 @@ class AndroidAppMethodTargetSelector implements MethodTargetSelector {
                     fragmentName = ((TypeReference)loadInstr.getToken()).getName().toString();
                     break;
                 } else {
-                    if (fragmentNameDef.getNumberOfUses() > 0) 
+                    if (fragmentNameDef.getNumberOfUses() > 0) {
                         fragmentNameDef = defUse.getDef(fragmentNameDef.getUse(0));
+                    }
                 }
             }
         }
