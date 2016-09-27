@@ -678,8 +678,13 @@ class TargetedPathsAnalysis {
                 Expression valueExpression = (sharedPrefExpression.getLeft().isVariable() && sharedPrefExpression.getLeft().getVariable().startsWith("SharedPreferences<")) ? sharedPrefExpression.getRight() : sharedPrefExpression.getLeft();
 
                 if (valueExpression.isVariable() && symbolTable.isConstant(invokeInstr.getUse(2))) {
-                    String sharedPrefValue = symbolTable.getConstantValue(invokeInstr.getUse(2)).toString();
-
+                    
+                    Object sharedPrefObject = symbolTable.getConstantValue(invokeInstr.getUse(2));
+                    String sharedPrefValue = "";
+                    if (sharedPrefObject != null) {
+                        sharedPrefValue = sharedPrefObject.toString();
+                    } 
+                    
                     // Ensure value being set matches the constraint
                     if (sharedPrefExpression.getOperator().equals(Expression.Operator.EQ) && !valueExpression.getVariable().equals(sharedPrefValue)) {
                         continue; 
