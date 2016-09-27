@@ -506,7 +506,7 @@ class AndroidAppMethodTargetSelector implements MethodTargetSelector {
             SSAGetInstruction getInstr = (SSAGetInstruction)defInstr;
             IClass runnableSubclass = _cha.lookupClass(getInstr.getDeclaredFieldType());
 
-            if (_cha.implementsInterface(runnableSubclass, _runnableClass) && !runnableSubclass.equals(_runnableClass)) {
+            if (runnableSubclass != null && _cha.implementsInterface(runnableSubclass, _runnableClass) && !runnableSubclass.equals(_runnableClass)) {
                 // Runnable subclass type is known exactly
                 //if (_cha.isSubclassOf(runnableSubclass, _runnableClass) && !runnableSubclass.equals(_runnableClass)) {
                 IMethod runMethod = runnableSubclass.getMethod(Selector.make("run()V"));
