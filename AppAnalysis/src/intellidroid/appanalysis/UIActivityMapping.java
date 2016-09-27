@@ -20,6 +20,7 @@ import org.w3c.dom.Element;
 import java.io.File;
 import java.io.FilenameFilter;
 import org.apache.commons.io.FilenameUtils;
+import org.xml.sax.SAXParseException;
 
 class UIActivityMapping {
     private final boolean DEBUG = false;
@@ -137,52 +138,57 @@ class UIActivityMapping {
 
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-        Document resourceXML = dBuilder.parse(xmlFile);
-        resourceXML.getDocumentElement().normalize();
+        try {
+            Document resourceXML = dBuilder.parse(xmlFile);
+        
+            resourceXML.getDocumentElement().normalize();
 
-        XPathFactory xPathfactory = XPathFactory.newInstance();
-        XPath xpath = xPathfactory.newXPath();
-        XPathExpression expr = xpath.compile("//@*[local-name()='id']/..");
-        NodeList uiElementNodes = (NodeList)expr.evaluate(resourceXML, XPathConstants.NODESET);
+            XPathFactory xPathfactory = XPathFactory.newInstance();
+            XPath xpath = xPathfactory.newXPath();
+            XPathExpression expr = xpath.compile("//@*[local-name()='id']/..");
+            NodeList uiElementNodes = (NodeList)expr.evaluate(resourceXML, XPathConstants.NODESET);
 
-        Collection<IClass> activitySubclasses = _cha.computeSubClasses(TypeReference.findOrCreate(ClassLoaderReference.Extension, "Landroid/app/Activity"));
+            Collection<IClass> activitySubclasses = _cha.computeSubClasses(TypeReference.findOrCreate(ClassLoaderReference.Extension, "Landroid/app/Activity"));
 
-        for (int i = 0; i < uiElementNodes.getLength(); i++) {
-            Node uiElementNode = uiElementNodes.item(i);
-            if (uiElementNode.getNodeType() != Node.ELEMENT_NODE) {
-                continue;
-            }
-
-            Element uiElement = (Element)uiElementNode;
-
-            String elementName = uiElement.getTagName();
-            //String id = uiElement.getAttribute("android:id");
-
-            if (uiElement.hasAttribute("android:onClick")) {
-                String onClickMethodName = uiElement.getAttribute("android:onClick");
-
-                //System.out.println("Layout: " + layoutName);
-                //System.out.println("    onclick: " + onClickMethodName);
-
-                if (!_handlerLayoutMap.containsKey(onClickMethodName)) {
-                    _handlerLayoutMap.put(onClickMethodName, new HashSet<String>());
+            for (int i = 0; i < uiElementNodes.getLength(); i++) {
+                Node uiElementNode = uiElementNodes.item(i);
+                if (uiElementNode.getNodeType() != Node.ELEMENT_NODE) {
+                    continue;
                 }
 
-                _handlerLayoutMap.get(onClickMethodName).add(xmlFile.getName());
+                Element uiElement = (Element)uiElementNode;
 
-                //for (IClass activitySubclass : activitySubclasses) {
-                //    if (!activitySubclass.getClassLoader().getReference().equals(ClassLoaderReference.Application)) {
-                //        continue;
-                //    }
+                String elementName = uiElement.getTagName();
+                //String id = uiElement.getAttribute("android:id");
 
-                //    for (IMethod declaredMethod : activitySubclass.getDeclaredMethods()) {
-                //        if (declaredMethod.getSelector().getName().toString().equals(onClickMethodName)) {
-                //            System.out.println("    activity: " + activitySubclass);
-                //        }
-                //    }
-                //}
+                if (uiElement.hasAttribute("android:onClick")) {
+                    String onClickMethodName = uiElement.getAttribute("android:onClick");
+
+                    //System.out.println("Layout: " + layoutName);
+                    //System.out.println("    onclick: " + onClickMethodName);
+
+                    if (!_handlerLayoutMap.containsKey(onClickMethodName)) {
+                        _handlerLayoutMap.put(onClickMethodName, new HashSet<String>());
+                    }
+
+                    _handlerLayoutMap.get(onClickMethodName).add(xmlFile.getName());
+
+                    //for (IClass activitySubclass : activitySubclasses) {
+                    //    if (!activitySubclass.getClassLoader().getReference().equals(ClassLoaderReference.Application)) {
+                    //        continue;
+                    //    }
+
+                    //    for (IMethod declaredMethod : activitySubclass.getDeclaredMethods()) {
+                    //        if (declaredMethod.getSelector().getName().toString().equals(onClickMethodName)) {
+                    //            System.out.println("    activity: " + activitySubclass);
+                    //        }
+                    //    }
+                    //}
+                }
             }
-        }
+        } catch (SAXParseException e) {
+            // ignore invalid characters in the XML file
+        } 
     }
 
     public Set<String> getUILayoutDefinedHandlers() {
