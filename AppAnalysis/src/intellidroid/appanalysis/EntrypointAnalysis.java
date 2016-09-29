@@ -65,6 +65,7 @@ class EntrypointAnalysis {
         _applicationLifecycleMethods.add(Selector.make("onConfigurationChanged(Landroid/content/res/Configuration;)V"));
         _applicationLifecycleMethods.add(Selector.make("onLowMemory()V"));
         _applicationLifecycleMethods.add(Selector.make("onTrimMemory()V"));
+        _applicationLifecycleMethods.add(Selector.make("attachBaseContext(Landroid/content/Context;)V"));
 
         _activityLifecycleMethods = new HashSet<Selector>();
         _activityLifecycleMethods.add(Selector.make("onCreate(Landroid/os/Bundle;)V"));

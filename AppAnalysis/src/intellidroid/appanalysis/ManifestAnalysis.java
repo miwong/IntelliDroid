@@ -92,7 +92,7 @@ class ManifestAnalysis {
             _packageName = manifestElement.getAttribute("package");
 
             Element applicationElement = (Element)manifestXML.getElementsByTagName("application").item(0);
-            _applicationName = applicationElement.getAttribute("android:name");
+            _applicationName = getFullClassName(applicationElement.getAttribute("android:name"));
 
             processActivities(manifestXML);
             processServices(manifestXML);
