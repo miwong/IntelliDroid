@@ -35,7 +35,7 @@ The 'AppAnalysis' directory holds the code that generate constraints for Android
 
 This project uses the Gradle build system.  Output files are located in the `build/` directory.  The gradlew script is a wrapper for machines that do not have Gradle already installed.  If your development machine already contains Gradle, you can use your own installation by replacing `./gradlew` with `gradle` in the commands below.  A network connection is required when compiling the code for the first time so that Gradle can automatically download dependencies.  
 
-The included Android framework files in the `android` directory were compiled using JDK 1.6, so we recommend that you use the compiler and runtime from JDK 1.6.  You can replace the files in this directory to try different versions of AOSP or JDK.  
+The included Android framework files in the `android` directory were compiled using JDK 1.6 but the `apktool` used in the preprocessing scripts require JDK 1.7.  We recommend using JDK 1.7, as that seems to work best.  If necessary, you can replace the files in the `android` directory to try different versions of AOSP or JDK.  
 
 #####Preprocessing APK files: 
 
