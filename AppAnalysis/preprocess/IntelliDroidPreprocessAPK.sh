@@ -6,7 +6,7 @@ if [ "$(uname)" == "Darwin" ]; then
     DARE=$(dirname $0)/dare-1.1.0-macos/dare
 fi
 
-APKTOOL=$(dirname $0)/apktool-2.0.0rc4/apktool
+APKTOOL=$(dirname $0)/apktool-2.3.1/apktool
 
 preprocessAPK() {
     # Expand the APK file path (only works in Linux)

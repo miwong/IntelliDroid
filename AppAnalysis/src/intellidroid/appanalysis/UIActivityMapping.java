@@ -19,8 +19,10 @@ import org.w3c.dom.Node;
 import org.w3c.dom.Element;
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.FileReader;
 import org.apache.commons.io.FilenameUtils;
 import org.xml.sax.SAXParseException;
+import com.google.gson.Gson;
 
 class UIActivityMapping {
     private final boolean DEBUG = false;
@@ -31,6 +33,8 @@ class UIActivityMapping {
 
     private Map<String, Set<String>> _handlerLayoutMap = new HashMap<String, Set<String>>();
     private Map<IMethod, Set<TypeReference>> _handlerActivityMap = new HashMap<IMethod, Set<TypeReference>>();
+    private UIAnnotationJsonEntry[] _annotationEntries;
+    private Map<String, Set<String>> _annotationListeners = new HashMap<String, Set<String>>();
 
     public UIActivityMapping(IClassHierarchy cha) {
         if (DEBUG) {
@@ -43,6 +47,10 @@ class UIActivityMapping {
             getLayoutIDs();
             getLayoutHandlers();
             //mapHandlerToElements();
+            File annotationsFile = new File(IntelliDroidAppAnalysis.Config.AppDirectory + "/guiAnnotations.json");
+            if (annotationsFile.exists()) {
+                loadUIAnnotations(annotationsFile);
+            }
         } catch (Exception e) {
             System.err.println("Exception: " + e.toString());
             e.printStackTrace();
@@ -588,6 +596,50 @@ class UIActivityMapping {
         }
 
         return false;
+    }
+
+    private static final class UIAnnotationJsonEntry {
+        String className;
+        String method;
+        String annotation;
+        int[] viewIds;
+    }
+
+    private void loadUIAnnotations(File annotationFile) throws Exception {
+        // load extracted annotations
+        // we can't process annotations internally since Dare doesn't copy them, like Dex2jar or other dex converters.
+        // so we have a gui-annotations-extract script to pull them directly from the .apk.
+        // For now, this is used for ButterKnife.
+
+        // Note: ButterKnife annotations are fragile: obfuscators remove/mangle them (so e.g. Microsoft Outlook loses the IDs)
+        // So long-term, we should process the ViewBinder/ViewBinding classes instead.
+        // this is good enough for non-ProGuarded apps like Kickstarter.
+        FileReader reader = null;
+        UIAnnotationJsonEntry[] entries = null;
+        try {
+            reader = new FileReader(annotationFile);
+            entries = new Gson().fromJson(reader, UIAnnotationJsonEntry[].class);
+        } finally {
+            if (reader != null) reader.close();
+        }
+        for (UIAnnotationJsonEntry entry: entries) {
+            if (entry.viewIds.length == 0) {
+                continue; // no IDs. See above.
+            }
+            String className = entry.className;
+            Set<String> myset = _annotationListeners.get(className);
+            if (myset == null) {
+                myset = new HashSet<String>();
+                _annotationListeners.put(className, myset);
+            }
+            myset.add(entry.method);
+        }
+        _annotationEntries = entries;
+    }
+    public Set<String> getAnnotationDefinedHandlers(String className) {
+        Set<String> retval = _annotationListeners.get(className);
+        if (retval != null) return retval;
+        return Collections.emptySet();
     }
 }
 

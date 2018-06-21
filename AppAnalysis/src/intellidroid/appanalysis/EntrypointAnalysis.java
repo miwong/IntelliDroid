@@ -316,7 +316,8 @@ class EntrypointAnalysis {
             for (IMethod activityMethod : activityClass.getDeclaredMethods()) {
                 if (_activityLifecycleMethods.contains(activityMethod.getSelector())) {
                     activityEntrypoints.put(activityMethod, MethodReference.findOrCreate(_activityClass, activityMethod.getSelector()));
-                } else if (uiDefinedHandlers.contains(activityMethod.getSelector().getName().toString())) {
+                } else if (uiDefinedHandlers.contains(activityMethod.getSelector().getName().toString()) ||
+                    annotationHandlers.contains(activityMethod.getSelector().toString())) {
                     activityEntrypoints.put(activityMethod, AndroidMethods.getOnClickMethod());
                 }
             }
